@@ -151,7 +151,6 @@ footer { border-top: 1px solid var(--line); padding-top: 16px; color: var(--mute
 </head>
 <body>
 
-
 <div class="wrap" id="bas">
 
 <header class="doc">
@@ -166,12 +165,12 @@ footer { border-top: 1px solid var(--line); padding-top: 16px; color: var(--mute
   <ol>
     <li><a href="#mimari"><span class="n">1</span>Ortak mimari</a></li>
     <li><a href="#temel"><span class="n">2</span>Statik analiz neye bakar</a></li>
-    <li><a href="#varyantlar"><span class="n">3</span>Dört varyant</a>
+    <li><a href="#ornekler"><span class="n">3</span>Dört örnek</a>
       <ol>
-        <li><a href="#v0"><span class="n">3.1</span>variant0: Çalışma zamanında kayıt</a></li>
-        <li><a href="#vA"><span class="n">3.2</span>A: const konfigürasyon, extern</a></li>
-        <li><a href="#vA2"><span class="n">3.3</span>A2: const konfigürasyon, Init parametresi</a></li>
-        <li><a href="#vB"><span class="n">3.4</span>B: switch ile dağıtım</a></li>
+        <li><a href="#runtimeRegister"><span class="n">3.1</span>runtimeRegister</a></li>
+        <li><a href="#runtimeRegisterConst"><span class="n">3.2</span>runtimeRegisterConst</a></li>
+        <li><a href="#constConfig"><span class="n">3.3</span>constConfig</a></li>
+        <li><a href="#switchDispatch"><span class="n">3.4</span>switchDispatch</a></li>
       </ol>
     </li>
     <li><a href="#karsilastirma"><span class="n">4</span>Karşılaştırma</a></li>
@@ -190,15 +189,15 @@ footer { border-top: 1px solid var(--line); padding-top: 16px; color: var(--mute
     <div class="box mm"><b>ModuleMgr</b><span>Vendor'ları tanımadan, <code>VendorId</code> üzerinden ilgili vendor'un fonksiyonunu çağırır.</span></div>
   </div>
 
-  <p>Vendor'ların sunduğu arayüz dört varyantta da aynı dört işlemden oluşuyor:</p>
+  <p>Vendor'ların sunduğu arayüz dört örnekte de aynı dört işlemden oluşuyor:</p>
 <pre><code>read      (uint32_t *pValue)   <span class="c">// değeri oku</span>
 write     (uint32_t value)     <span class="c">// değer yaz</span>
 execute   (uint32_t cmd)       <span class="c">// START / STOP / RESET</span>
 getStatus (void)               <span class="c">// IDLE / BUSY</span></code></pre>
 
-  <p>Örnekteki iki vendor aynı arayüzü sunar ama farklı davranır: <strong>VendorA</strong> kendisine yazılan son değeri saklar, <strong>VendorB</strong> ise yazılan değerleri toplar. ModuleMgr aynı çağrıyı yapar, sonucu vendor belirler. Dört varyant da aynı demo senaryosunu çalıştırır ve aynı sonucu verir (A = 41, B = 61).</p>
+  <p>Örnekteki iki vendor aynı arayüzü sunar ama farklı davranır: <strong>VendorA</strong> kendisine yazılan son değeri saklar, <strong>VendorB</strong> ise yazılan değerleri toplar. ModuleMgr aynı çağrıyı yapar, sonucu vendor belirler. Dört örnek de aynı demo senaryosunu çalıştırır ve aynı sonucu verir (A = 41, B = 61).</p>
 
-  <p>Varyantların birbirinden farkı tek bir soruya verdikleri cevapta: <strong>ModuleMgr, bir VendorId için hangi fonksiyonu çağıracağını nereden öğreniyor?</strong></p>
+  <p>Dört örnekte de ModuleMgr tek başına derlenebiliyor; hiçbirinde vendor ya da entegratör header'ı include etmiyor. Örneklerin birbirinden farkı tek bir soruya verdikleri cevapta: <strong>ModuleMgr, bir VendorId için hangi fonksiyonu çağıracağını nereden öğreniyor?</strong></p>
 </section>
 
 <!-- ================================================================== -->
@@ -216,17 +215,20 @@ getStatus (void)               <span class="c">// IDLE / BUSY</span></code></pre
   <p>Güvenlik standartları (ISO 26262, IEC 61508) bunlara ek olarak <strong>call graph</strong>, <strong>stack analizi</strong> ve <strong>freedom from interference</strong> ister. Bu analizlerin hepsi aynı bilgiye dayanır: <strong>hangi fonksiyonun hangi fonksiyonu çağırdığı derleme anında belli olmalı.</strong></p>
   <p>Bu mimarideki kritik satır şu:</p>
 <pre><code>ret = pIfc-&gt;writeIfc(value);    <span class="c">// statik analiz aracı: "bu satır hangi fonksiyonu çağırıyor?"</span></code></pre>
-  <p>Varyantlar bu sorunun cevabını farklı yerlere koyuyor. Cevap ne kadar erken (derleme anında) ve ne kadar tek bir yerde belli oluyorsa, analiz o kadar kolaylaşıyor.</p>
+  <p>Örnekler bu sorunun cevabını farklı yerlere koyuyor. Cevap ne kadar erken (derleme anında) ve ne kadar tek bir yerde belli oluyorsa, analiz o kadar kolaylaşıyor. Cevap iki halkadan oluşuyor:</p>
+<pre><code>Halka 1:  tablo.writeIfc     ──►  vendorA_write   <span class="c">// tablonun içi</span>
+Halka 2:  ID ──► hangi tablo ──►  &amp;tablo          <span class="c">// ID ile tablo eşleşmesi</span></code></pre>
+  <p>Analiz aracı ancak iki halka da derleme anında belli olduğunda <code>VendorId</code> ile çağrılan fonksiyonu kesin olarak bilebilir.</p>
 </section>
 
 <!-- ================================================================== -->
-<section class="sec" id="varyantlar">
-  <h2 class="sec-title"><span class="n">3</span>Dört varyant</h2>
+<section class="sec" id="ornekler">
+  <h2 class="sec-title"><span class="n">3</span>Dört örnek</h2>
 
-  <!-- ---------------- variant0 ---------------- -->
-  <article class="variant" id="v0">
-    <div class="v-head"><h3>variant0: Çalışma zamanında kayıt</h3><span class="folder">variant0_runtimeReg/</span></div>
-    <p class="idea">Her vendor, kendi Init fonksiyonunda arayüz tablosunu doldurup ModuleMgr'a kendini kaydeder. ModuleMgr bu kayıtları RAM'deki bir dizide tutar.</p>
+  <!-- ---------------- runtimeRegister ---------------- -->
+  <article class="variant" id="runtimeRegister">
+    <div class="v-head"><h3>runtimeRegister: Çalışma zamanında kayıt</h3><span class="folder">runtimeRegister/</span></div>
+    <p class="idea">Her vendor, kendi Init fonksiyonunda arayüz tablosunu doldurup ModuleMgr'a kendini kaydeder. ModuleMgr bu kayıtları RAM'deki bir dizide tutar. Tablolar <code>const</code> değil.</p>
 
     <h4>Yapı ve akış</h4>
 <pre><code><span class="c">/* Vendor */</span>
@@ -249,119 +251,124 @@ ret = pIfc-&gt;writeIfc(value);                <span class="c">// findEntry(id) 
     <div class="pc">
       <div class="plus"><h5>Artıları</h5><ul>
         <li>Fikir doğal ve esnek: vendor kendini kaydeder, entegratör sadece Init çağırır.</li>
-        <li>ModuleMgr'ın kimseye link bağımlılığı yok.</li>
         <li>Çalışma sırasında vendor eklenip çıkarılabilir (<code>Unregister</code>).</li>
         <li>Vendor fonksiyonlarının hepsi <code>static</code>; dışarıya sadece Init açık.</li>
       </ul></div>
       <div class="minus"><h5>Eksileri</h5><ul>
-        <li>ID ile fonksiyon eşleşmesi sadece çalışma zamanında kuruluyor; statik analiz bu bağı göremiyor.</li>
+        <li>İki halka da çalışma zamanında kuruluyor; statik analiz çağrı hedefini göremiyor.</li>
         <li>Tablolar RAM'de. Bir bellek taşması fonksiyon pointer'ını bozarsa program rastgele bir adrese atlar.</li>
+        <li>ModuleMgr tabloyu değiştirebilir; derleyici bunu engellemiyor (MISRA 8.13 ihlali).</li>
         <li>Aynı ID iki kez kullanılırsa ya da kayıttan önce çağrı yapılırsa, hata ancak çalışma zamanında ortaya çıkar.</li>
-        <li>Tablo Init içinde doldurulduğu için <code>const</code> olamıyor, dolayısıyla flash'a konamıyor.</li>
       </ul></div>
     </div>
 
     <div class="sa">
       <span class="grade g-bad">Statik analiz: zor</span>
-      <p>Çağrı zinciri dört dosyaya yayılmış ve tamamen çalışma zamanında kuruluyor: <code>s_vendors[i].pIfc</code> → <code>Register</code> → <code>VendorA_Init</code> → çalışma zamanında doldurulan tablo. Call graph bu noktada kopuyor, stack analizi elle annotation istiyor, formel kanıt araçları da "kanıtlayamadım" uyarılarıyla doluyor. ModuleMgr'ın const olmayan pointer'ları MISRA 8.13'ü (advisory) da ihlal ediyor.</p>
+      <p>Çağrı zinciri dört dosyaya yayılmış ve tamamen çalışma zamanında kuruluyor: <code>s_vendors[i].pIfc</code> → <code>Register</code> → <code>VendorA_Init</code> → çalışma zamanında doldurulan tablo. Call graph bu noktada kopuyor, stack analizi elle annotation istiyor, formel kanıt araçları da "kanıtlayamadım" uyarılarıyla doluyor.</p>
     </div>
-
-    <h4>Neden "sadece const yapmak" yetmiyor</h4>
-<pre><code>Halka 1:  s_vendorAIfc.writeIfc ──► vendorA_write   <span class="c">// tablonun içi: const bunu çözer</span>
-Halka 2:  s_vendors[0].pIfc     ──► &amp;s_vendorAIfc  <span class="c">// kayıt dizisi: const bunu çözmez</span></code></pre>
-    <p>Tablolar <code>static const</code> yapılırsa araç her tablonun içeriğini tek satırdan kesin olarak okur. Ama kayıt dizisi hâlâ çalışma zamanında doluyor. Araçlar böyle bir dizinin bütün slotlarını tek bir özet halinde birleştirir (array smashing): "id alanı A veya B olabilir, pIfc alanı da A veya B olabilir". Bu özetlemede <strong>iki alan arasındaki bağ kopar</strong>. <code>findEntry(0x0A01)</code> çalışma zamanında doğru slotu bulsa bile, araç o satır için "VendorA <em>veya</em> VendorB çağrılır" der. Bu sonuç yanlış değil ama kaba. Ayrıca ModuleMgr.c tek başına analiz edildiğinde <code>Register</code>'a gelen değerler hiç bilinmez.</p>
   </article>
 
-  <!-- ---------------- A ---------------- -->
-  <article class="variant" id="vA">
-    <div class="v-head"><h3>A: const konfigürasyon tablosu, extern sembol</h3><span class="folder">variantA_constCfg/</span></div>
-    <p class="idea">Kayıt işlemi çalışma zamanından derleme anına taşınıyor. Vendor'lar arayüz tablolarını <code>const</code> olarak dışarı açıyor; entegratör de ID ile tablo eşleşmesini <code>const</code> bir konfigürasyon tablosuna yazıyor.</p>
+  <!-- ---------------- runtimeRegisterConst ---------------- -->
+  <article class="variant" id="runtimeRegisterConst">
+    <div class="v-head"><h3>runtimeRegisterConst: Çalışma zamanında kayıt, const tablolar</h3><span class="folder">runtimeRegisterConst/</span></div>
+    <p class="idea">runtimeRegister ile aynı yapı; tek fark, tablolar <code>static const</code> olarak tanımlandıkları satırda dolduruluyor ve flash'ta duruyor. ModuleMgr da tabloları <code>const</code> pointer ile tutuyor. Kayıt hâlâ çalışma zamanında yapılıyor.</p>
 
     <h4>Yapı ve akış</h4>
-<pre><code><span class="c">/* Vendor: tablo const, tanımlandığı satırda dolu (flash) */</span>
-const VendorIfc_t VendorA_Ifc = { .writeIfc = vendorA_write, ... };
+<pre><code><span class="c">/* Vendor: flash'ta, tanımlandığı satırda dolu */</span>
+static <span class="k">const</span> VendorIfc_t s_vendorAIfc = { .writeIfc = vendorA_write, ... };
 
-<span class="c">/* ModuleMgr.h: tipi ve sembol adını ModuleMgr belirliyor */</span>
-extern const ModuleMgr_CfgEntry_t g_moduleMgrCfg[];
+MM_Ret_t VendorA_Init(void)
+{
+    return ModuleMgr_Register(VENDOR_A_ID, &amp;s_vendorAIfc);   <span class="c">// sadece kayıt</span>
+}
 
-<span class="c">/* Entegratör (ModuleMgr_Cfg.c): sembolü tanımlıyor */</span>
-const ModuleMgr_CfgEntry_t g_moduleMgrCfg[] = {
-    { VENDOR_A_ID, &amp;VendorA_Ifc },
-    { VENDOR_B_ID, &amp;VendorB_Ifc },
-};
+<span class="c">/* ModuleMgr: tabloyu sadece okuyabilir */</span>
+MM_Ret_t ModuleMgr_Register(VendorId_t id, <span class="k">const</span> VendorIfc_t *pIfc);</code></pre>
 
-<span class="c">/* main */</span>
-VendorA_Init();  VendorB_Init();   <span class="c">// sadece vendor'ın kendi durumunu hazırlar</span>
-ModuleMgr_Init();                   <span class="c">// konfigürasyonu doğrular (NULL, tekrarlanan ID)</span></code></pre>
-    <p><strong>Yeni vendor eklemek:</strong> Konfigürasyon tablosuna bir satır ve main'e bir Init çağrısı.</p>
+    <h4>Derlenmiş kodda fark</h4>
+    <div class="tbl"><table>
+      <thead><tr><th></th><th>runtimeRegister</th><th>runtimeRegisterConst</th></tr></thead>
+      <tbody>
+        <tr><td>Tablonun yeri (<code>nm</code>)</td><td class="n"><code>b</code>: RAM (.bss)</td><td class="y"><code>r</code>: salt-okunur (MCU'da flash)</td></tr>
+        <tr><td>ModuleMgr'a <code>pIfc-&gt;writeIfc = NULL;</code> eklenirse</td><td class="n">Sessizce derlenir</td><td class="y">Derleme hatası: <code>read-only object</code></td></tr>
+        <tr><td>Çalışma zamanı davranışı</td><td colspan="2">Aynı; çıktı birebir aynı</td></tr>
+      </tbody>
+    </table></div>
 
     <div class="pc">
       <div class="plus"><h5>Artıları</h5><ul>
-        <li>ID ile fonksiyon eşleşmesi derleme anında, tek bir satırda kesin.</li>
-        <li>Tablolar <code>const</code> ve flash'ta; çalışma sırasında bozulamaz.</li>
-        <li><code>Register</code> ve RAM'deki kayıt dizisi yok, kod daha küçük.</li>
-        <li>Vendor fonksiyonları hâlâ <code>static</code>; dışarı sadece tablo açılıyor.</li>
-        <li>Yeni vendor eklemek tek satırlık bir değişiklik.</li>
+        <li>"Vendor kendini kaydeder" yapısı korunuyor.</li>
+        <li>Tablolar flash'ta; çalışma sırasında bozulamaz.</li>
+        <li>ModuleMgr tabloyu değiştiremez; derleyici engelliyor (MISRA 8.13 uyumlu).</li>
+        <li>Halka 1 çözülüyor: her tablonun içi tek satırda, kesin olarak okunabiliyor.</li>
       </ul></div>
       <div class="minus"><h5>Eksileri</h5><ul>
-        <li>ModuleMgr, entegratörün tanımlaması gereken bir sembole (<code>g_moduleMgrCfg</code>) link seviyesinde bağımlı.</li>
-        <li>ModuleMgr tek başına link edilemiyor; unit test için sahte bir tablo tanımlamak gerekiyor.</li>
-        <li>Sembol adı sabit, bu yüzden bir binary içinde tek bir konfigürasyon olabiliyor.</li>
-        <li>Vendor kendini kaydetmiyor; vendor listesi iki yerde tutuluyor (konfigürasyon tablosu ve Init çağrıları).</li>
+        <li>Halka 2 çözülmüyor: kayıt dizisi hâlâ çalışma zamanında doluyor.</li>
+        <li>Analiz aracı "hangi ID hangi vendor'a gidiyor" bilgisini kaybediyor.</li>
+        <li>Aynı ID ya da kayıt öncesi çağrı yine ancak çalışma zamanında yakalanıyor.</li>
       </ul></div>
     </div>
 
     <div class="sa">
-      <span class="grade g-ok">Statik analiz: iyi</span>
-      <p>Fonksiyon pointer'ları hâlâ var, ama pointer'ın alabileceği değerler değişmeyen tek bir tablonun tanımlama satırından okunuyor. Tüm programı analiz eden araçlar (Polyspace, Astrée) bunu tam olarak çözer; stack aracına da kesin bir hedef listesi verilebilir. ModuleMgr'da hâlâ ID ile arama yapılıyor; fark, aranan verinin bir çalışma geçmişinden değil sabit bir tanımdan gelmesi.</p>
+      <span class="grade g-bad">Statik analiz: orta</span>
+      <p>Araçlar çalışma zamanında dolan bir dizinin bütün slotlarını tek bir özet halinde birleştirir (array smashing): "id alanı A veya B, pIfc alanı da A veya B". Bu özetlemede <strong>iki alan arasındaki bağ kopar</strong>. <code>findEntry(0x0A01)</code> çalışma zamanında doğru slotu bulsa bile araç <code>pIfc-&gt;writeIfc(value)</code> satırı için "<code>vendorA_write</code> <em>veya</em> <code>vendorB_write</code>" der. Bu yine de runtimeRegister'a göre büyük bir ilerleme: call graph iki hedefe birden ok çizerek kurulabilir, stack analizi de ikisinden büyüğünü alarak bir üst sınır hesaplayabilir. "Vendor kendini kaydeder" yapısıyla ulaşılabilecek en iyi nokta bu.</p>
     </div>
   </article>
 
-  <!-- ---------------- A2 ---------------- -->
-  <article class="variant" id="vA2">
-    <div class="v-head"><h3>A2: const konfigürasyon, Init parametresi</h3><span class="folder">variantA2_cfgParam/</span></div>
-    <p class="idea">A ile aynı <code>const</code> tablo, tek fark: konfigürasyon bir <code>extern</code> sembol yerine <code>ModuleMgr_Init</code>'e parametre olarak veriliyor. AUTOSAR'ın "post-build" konfigürasyonu da bu şekilde çalışır.</p>
+  <!-- ---------------- constConfig ---------------- -->
+  <article class="variant" id="constConfig">
+    <div class="v-head"><h3>constConfig: const konfigürasyon, Init parametresi</h3><span class="folder">constConfig/</span></div>
+    <p class="idea">Kayıt işlemi çalışma zamanından derleme anına taşınıyor. Entegratör ID ile tablo eşleşmesini <code>const</code> bir konfigürasyon tablosuna yazıyor ve bu tabloyu <code>ModuleMgr_Init(&amp;cfg)</code> ile parametre olarak veriyor. AUTOSAR'ın "post-build" konfigürasyonu da bu şekilde çalışır.</p>
 
     <h4>Yapı ve akış</h4>
-<pre><code><span class="c">/* ModuleMgr.h: tipleri tanımlıyor, extern hiçbir şey yok */</span>
+<pre><code><span class="c">/* Vendor: tablo const, flash'ta; entegratöre açılıyor */</span>
+const VendorIfc_t VendorA_Ifc = { .writeIfc = vendorA_write, ... };
+
+<span class="c">/* ModuleMgr.h: tipleri tanımlıyor, extern hiçbir şey yok */</span>
 typedef struct { const ModuleMgr_CfgEntry_t *pEntries; uint8_t count; } ModuleMgr_Config_t;
 MM_Ret_t ModuleMgr_Init(<span class="k">const</span> ModuleMgr_Config_t *pCfg);
 
 <span class="c">/* ModuleMgr.c: Init'te bir kez atanan tek pointer */</span>
 static const ModuleMgr_Config_t *s_pCfg = NULL;   <span class="c">// NULL = init edilmemiş</span>
 
-<span class="c">/* Entegratör: tablo yine const; sembol adını entegratör seçiyor */</span>
-static const ModuleMgr_CfgEntry_t s_entries[] = { { VENDOR_A_ID, &amp;VendorA_Ifc }, ... };
+<span class="c">/* Entegratör: ID ile tablo eşleşmesi tek bir const tabloda */</span>
+static const ModuleMgr_CfgEntry_t s_entries[] = {
+    { VENDOR_A_ID, &amp;VendorA_Ifc },
+    { VENDOR_B_ID, &amp;VendorB_Ifc },
+};
 const ModuleMgr_Config_t Integrator_ModuleMgrCfg = { s_entries, 2u };
 
 <span class="c">/* main */</span>
-ModuleMgr_Init(&amp;Integrator_ModuleMgrCfg);</code></pre>
-    <p><strong>Yeni vendor eklemek:</strong> A ile aynı; tabloya bir satır ve main'e bir Init çağrısı.</p>
+VendorA_Init();  VendorB_Init();              <span class="c">// sadece vendor'ın kendi durumu</span>
+ModuleMgr_Init(&amp;Integrator_ModuleMgrCfg);    <span class="c">// doğrular + saklar</span></code></pre>
+    <p><strong>Yeni vendor eklemek:</strong> Konfigürasyon tablosuna bir satır ve main'e bir Init çağrısı.</p>
 
     <div class="pc">
       <div class="plus"><h5>Artıları</h5><ul>
-        <li>A'nın bütün artıları geçerli.</li>
-        <li>ModuleMgr'ın dışarıdan beklediği hiçbir sembol yok; tek başına link edilebiliyor.</li>
+        <li>İki halka da derleme anında, tek bir tabloda kesin.</li>
+        <li>Tablolar <code>const</code> ve flash'ta; çalışma sırasında bozulamaz.</li>
+        <li>ModuleMgr'ın dışarıdan beklediği hiçbir sembol yok; tek başına derlenip link edilebiliyor.</li>
         <li>Unit test kolay: test kendi konfigürasyonunu hazırlayıp Init'e veriyor.</li>
-        <li>Konfigürasyonun adını ve yerini entegratör seçiyor.</li>
-        <li>Hatalı bir konfigürasyon asla saklanmıyor; ModuleMgr init edilmemiş durumda kalıyor.</li>
+        <li><code>Register</code> ve RAM'deki kayıt dizisi yok; kod daha küçük.</li>
+        <li>Vendor fonksiyonları hâlâ <code>static</code>; hatalı konfigürasyon (NULL, tekrarlanan ID) Init'te reddediliyor.</li>
       </ul></div>
       <div class="minus"><h5>Eksileri</h5><ul>
-        <li>"Init tek bir yerden, bir kez çağrılır" kuralına uyulmalı ve kod bunu zorlamıyor; kontrol code review'a ya da analiz aracına kalıyor.</li>
+        <li>Vendor kendini kaydetmiyor; vendor'ları konfigürasyona entegratör yazıyor.</li>
+        <li>Vendor listesi iki yerde tutuluyor: konfigürasyon tablosu ve Init çağrıları.</li>
+        <li>"Init tek bir yerden, bir kez çağrılır" kuralına uyulmalı; kod bunu zorlamıyor.</li>
         <li>Erişimde bir dolaylılık daha var (<code>s_pCfg-&gt;pEntries[i]</code>).</li>
-        <li>A'daki gibi vendor kendini kaydetmiyor ve vendor listesi iki yerde tutuluyor.</li>
       </ul></div>
     </div>
 
     <div class="sa">
-      <span class="grade g-ok">Statik analiz: iyi (A ile aynı)</span>
-      <p>Konfigürasyon pointer'ı çalışma zamanında atanıyor, ama variant0'daki <code>Register</code>'dan farklı olarak <strong>tek bir pointer bir kez</strong> atanıyor. ID ile vendor eşleşmesi hâlâ <code>const</code> tablonun tanımlama satırında duruyor. Tüm programı analiz eden araçlar bu atamayı rahatlıkla çözer. ModuleMgr.c tek başına analiz edildiğinde konfigürasyonun içeriği bilinmez, ama bu A'da da aynı. Init farklı yerlerden farklı konfigürasyonlarla çağrılırsa kesinlik düşer; kuralın sebebi bu.</p>
+      <span class="grade g-ok">Statik analiz: iyi</span>
+      <p>Fonksiyon pointer'ları hâlâ var, ama alabilecekleri değerler ve ID eşleşmesi değişmeyen tek bir tablonun tanımlama satırından okunuyor. Konfigürasyon pointer'ı çalışma zamanında atanıyor, ama runtimeRegister'daki kayıt dizisinden farklı olarak <strong>tek bir pointer bir kez</strong> atanıyor. Tüm programı analiz eden araçlar (Polyspace, Astrée) bunu tam çözer; stack aracına da kesin bir hedef listesi verilebilir. Init farklı yerlerden farklı konfigürasyonlarla çağrılırsa kesinlik düşer; kuralın sebebi bu.</p>
     </div>
   </article>
 
-  <!-- ---------------- B ---------------- -->
-  <article class="variant" id="vB">
-    <div class="v-head"><h3>B: switch ile dağıtım, fonksiyon pointer'ı yok</h3><span class="folder">variantB_switch/</span></div>
+  <!-- ---------------- switchDispatch ---------------- -->
+  <article class="variant" id="switchDispatch">
+    <div class="v-head"><h3>switchDispatch: switch ile dağıtım</h3><span class="folder">switchDispatch/</span></div>
     <p class="idea">Fonksiyon pointer'ları tamamen kaldırılıyor. Entegratörün dosyasında, her işlem için ID'ye göre doğrudan çağrı yapan bir <code>switch</code> var.</p>
 
     <h4>Yapı ve akış</h4>
@@ -395,18 +402,18 @@ ret = ModuleMgr_Cfg_Write(id, value);</code></pre>
       <div class="minus"><h5>Eksileri</h5><ul>
         <li>Vendor fonksiyonları <code>public</code> olmak zorunda; kapsülleme zayıflıyor.</li>
         <li>Yeni vendor eklemek 5 ayrı yerde değişiklik demek; elle yapıldığında hataya açık, pratikte kod üretici gerekiyor.</li>
-        <li>ModuleMgr 7 sembole link seviyesinde bağımlı. Bu bağımlılığı kaldırmanın yolu fonksiyonları parametre olarak vermek, bu da yine fonksiyon pointer'ına, yani A'ya dönmek demek.</li>
+        <li>ModuleMgr, entegratörün tanımladığı 7 sembole link seviyesinde bağımlı; tek başına link edilemiyor.</li>
         <li>ModuleMgr çok inceliyor; asıl iş entegratörün dosyasına geçiyor.</li>
       </ul></div>
     </div>
 
     <div class="sa">
       <span class="grade g-best">Statik analiz: en iyi</span>
-      <p>Çağrı zinciri tamamen doğrudan: <code>ModuleMgr_Write → ModuleMgr_Cfg_Write → VendorA_Write</code>. Bir aracın çözmesi gereken hiçbir dolaylı çağrı yok. Bunun bedeli esneklik: "vendor'ları bilen kod" derleme anında bir yerde yazılı olmak zorunda.</p>
+      <p>Çağrı zinciri tamamen doğrudan: <code>ModuleMgr_Write → ModuleMgr_Cfg_Write → VendorA_Write</code>. Bir aracın çözmesi gereken hiçbir dolaylı çağrı yok. Bunun bedeli esneklik ve bağımlılık: "vendor'ları bilen kod" derleme anında bir yerde yazılı olmak zorunda. Bu bağımlılığı kaldırmanın yolu fonksiyonları parametre olarak vermek, bu da yine fonksiyon pointer'ına, yani constConfig'e dönmek demek.</p>
     </div>
   </article>
 
-  <div class="note"><span class="lbl">Ortak MISRA düzeltmeleri</span><p>A, A2 ve B'de ek olarak şu MISRA C:2012 kurallarına uyuldu: 15.5 (tek çıkış noktası), 16.3 (switch case'leri <code>break</code> ile biter) ve 17.7 (dönüş değerleri kullanılır ya da <code>(void)</code> ile açıkça yok sayılır). Demodaki <code>printf</code> kullanımı Rule 21.6'ya karşı bilinçli bir sapma. Dinamik bellek, <code>void*</code> veya cast hiçbir varyantta yok.</p></div>
+  <div class="note"><span class="lbl">MISRA</span><p>constConfig ve switchDispatch örneklerinde ek olarak şu MISRA C:2012 kurallarına uyuldu: 15.5 (tek çıkış noktası), 16.3 (switch case'leri <code>break</code> ile biter) ve 17.7 (dönüş değerleri kullanılır ya da <code>(void)</code> ile açıkça yok sayılır). Demodaki <code>printf</code> kullanımı Rule 21.6'ya karşı bilinçli bir sapma. Dinamik bellek, <code>void*</code> veya cast hiçbir örnekte yok.</p></div>
 </section>
 
 <!-- ================================================================== -->
@@ -414,45 +421,32 @@ ret = ModuleMgr_Cfg_Write(id, value);</code></pre>
   <h2 class="sec-title"><span class="n">4</span>Karşılaştırma</h2>
 
   <div class="tbl wide"><table>
-    <thead><tr><th></th><th>variant0</th><th>A</th><th>A2</th><th>B</th></tr></thead>
+    <thead><tr><th></th><th>runtimeRegister</th><th>runtimeRegisterConst</th><th>constConfig</th><th>switchDispatch</th></tr></thead>
     <tbody>
       <tr><td>Fonksiyon pointer'ı</td><td>Var</td><td>Var</td><td>Var</td><td class="y">Yok</td></tr>
-      <tr><td>Çağrı hedefi derleme anında belli mi</td><td class="n">Hayır</td><td class="y">Evet</td><td class="y">Evet</td><td class="y">Evet</td></tr>
-      <tr><td>ID ile vendor eşleşmesi belli mi</td><td class="n">Hayır</td><td class="y">Evet</td><td class="y">Evet</td><td class="y">Evet</td></tr>
+      <tr><td>Halka 1: tablonun içi derleme anında belli mi</td><td class="n">Hayır</td><td class="y">Evet</td><td class="y">Evet</td><td class="y">Tablo yok</td></tr>
+      <tr><td>Halka 2: ID ile vendor eşleşmesi belli mi</td><td class="n">Hayır</td><td class="n">Hayır</td><td class="y">Evet</td><td class="y">Evet</td></tr>
       <tr><td>Tablo nerede</td><td class="n">RAM</td><td class="y">Flash</td><td class="y">Flash</td><td class="y">Tablo yok</td></tr>
       <tr><td>Vendor fonksiyonları</td><td class="y">static</td><td class="y">static</td><td class="y">static</td><td class="m">public</td></tr>
-      <tr><td>ModuleMgr'ın link bağımlılığı</td><td class="y">Yok</td><td class="m">2 sembol</td><td class="y">Yok</td><td class="n">7 sembol</td></tr>
-      <tr><td>Vendor kendini kaydeder mi</td><td class="y">Evet</td><td>Hayır</td><td>Hayır</td><td>Hayır</td></tr>
-      <tr><td>Tekrarlanan ID ne zaman yakalanır</td><td class="m">Register'da</td><td class="m">Init'te</td><td class="m">Init'te</td><td class="y">Derlemede</td></tr>
-      <tr><td>Yeni vendor eklemek</td><td>Init çağrısı</td><td>Tabloya 1 satır</td><td>Tabloya 1 satır</td><td class="m">5 switch'e case</td></tr>
-      <tr><td>Unit test kolaylığı</td><td class="y">Kolay</td><td class="m">Sahte sembol gerekir</td><td class="y">Kolay</td><td class="m">Sahte dağıtıcı gerekir</td></tr>
-      <tr><td>Statik analiz</td><td class="n">Zor</td><td class="y">İyi</td><td class="y">İyi</td><td class="y">En iyi</td></tr>
+      <tr><td>ModuleMgr tek başına link edilebilir mi</td><td class="y">Evet</td><td class="y">Evet</td><td class="y">Evet</td><td class="n">Hayır (7 sembol)</td></tr>
+      <tr><td>Vendor kendini kaydeder mi</td><td class="y">Evet</td><td class="y">Evet</td><td>Hayır</td><td>Hayır</td></tr>
+      <tr><td>Tekrarlanan ID ne zaman yakalanır</td><td class="m">Register'da</td><td class="m">Register'da</td><td class="m">Init'te</td><td class="y">Derlemede</td></tr>
+      <tr><td>Yeni vendor eklemek</td><td>Init çağrısı</td><td>Init çağrısı</td><td>Tabloya 1 satır</td><td class="m">5 switch'e case</td></tr>
+      <tr><td>Statik analiz</td><td class="n">Zor</td><td class="m">Orta</td><td class="y">İyi</td><td class="y">En iyi</td></tr>
     </tbody>
   </table></div>
-
-  <h3>Bağımlılığın kanıtı</h3>
-  <p>Derlenmiş <code>ModuleMgr.o</code> dosyasında <code>nm -u</code> ile listelenen, yani ModuleMgr'ın dışarıdan beklediği semboller:</p>
-  <div class="tbl"><table>
-    <thead><tr><th>Varyant</th><th>Dışarıdan beklenen semboller</th></tr></thead>
-    <tbody>
-      <tr><td>A</td><td><code>g_moduleMgrCfg</code>, <code>g_moduleMgrCfgSize</code></td></tr>
-      <tr><td>A2</td><td class="y">Hiçbiri</td></tr>
-      <tr><td>B</td><td><code>ModuleMgr_Cfg_Read/Write/Execute/GetStatus/GetName</code>, <code>g_moduleMgrVendorIds</code>, <code>g_moduleMgrVendorCount</code></td></tr>
-    </tbody>
-  </table></div>
-  <p>Hiçbir varyantta ModuleMgr.c bir vendor ya da entegratör header'ını include etmiyor; derleme seviyesinde bağımlılık yok. Fark link seviyesinde. A'da bağımlılık ters çevrilmiş (dependency inversion): sembolün tipini ve adını ModuleMgr belirliyor, entegratör de bu sözleşmeye uyuyor. A2 bu bağımlılığı tamamen kaldırıyor.</p>
 </section>
 
 <!-- ================================================================== -->
 <section class="sec" id="secim">
   <h2 class="sec-title"><span class="n">5</span>Hangisi ne zaman</h2>
   <div class="pick">
-    <div><b>A2</b><span><strong>Genel öneri.</strong> Statik analiz önemli, konfigürasyon elle yazılıyor ve ModuleMgr'ın kimseye bağımlı olmaması isteniyor. Tek kural: Init tek bir yerden, bir kez çağrılır.</span></div>
-    <div><b>B</b><span>Güvenlik kritik bir proje (ör. ISO 26262 ASIL C/D) ve bir kod üretici ya da konfigüratör var. En temiz call graph bu yapıda.</span></div>
-    <div><b>A</b><span>A2'ye göre tek avantajı daha az parametre geçişi. Özel bir sebep yoksa A2 tercih edilmeli.</span></div>
-    <div><b>variant0</b><span>Prototip ya da çalışma zamanında eklenen plugin'ler; statik analiz ikincil önemde. Kullanılacaksa en azından tablolar <code>static const</code> yapılmalı (ara çözüm).</span></div>
+    <div><b>constConfig</b><span><strong>Genel öneri.</strong> Statik analiz önemli, konfigürasyon elle yazılıyor ve ModuleMgr'ın kendi başına derlenmesi isteniyor. Tek kural: Init tek bir yerden, bir kez çağrılır.</span></div>
+    <div><b>switchDispatch</b><span>Güvenlik kritik bir proje (ör. ISO 26262 ASIL C/D) ve bir kod üretici ya da konfigüratör var. En temiz call graph bu yapıda.</span></div>
+    <div><b>runtimeRegisterConst</b><span>"Vendor kendini kaydeder" yapısı korunmak isteniyor. Statik analiz için ara bir çözüm; ID eşleşmesi kesin değil.</span></div>
+    <div><b>runtimeRegister</b><span>Prototip ya da çalışma zamanında eklenen plugin'ler. Gerçek projede en azından runtimeRegisterConst tercih edilmeli.</span></div>
   </div>
-  <div class="note warn"><span class="lbl">Tasarım bedeli</span><p>Statik analize tam uygun her varyant, "vendor kendini kaydeder" fikrinden vazgeçiyor; vendor'ları konfigürasyona entegratör yazıyor. Kaydın çalışma zamanında yapılması, zaten analizi zorlaştıran şeyin kendisi.</p></div>
+  <div class="note warn"><span class="lbl">Tasarım bedeli</span><p>Statik analize tam uygun her örnek "vendor kendini kaydeder" fikrinden vazgeçiyor; vendor'ları konfigürasyona entegratör yazıyor. Kaydın çalışma zamanında yapılması, zaten analizi zorlaştıran şeyin kendisi.</p></div>
 </section>
 
 <!-- ================================================================== -->
@@ -460,7 +454,7 @@ ret = ModuleMgr_Cfg_Write(id, value);</code></pre>
   <h2 class="sec-title"><span class="n">6</span>Kavramlar</h2>
   <dl class="gloss">
     <dt>Late binding / early binding</dt>
-    <dd>Çağrı hedefinin çalışma zamanında (geç) ya da derleme anında (erken) belirlenmesi. variant0 geç bağlama yapıyor; A, A2 ve B erken bağlama yapıyor.</dd>
+    <dd>Çağrı hedefinin çalışma zamanında (geç) ya da derleme anında (erken) belirlenmesi. runtimeRegister ve runtimeRegisterConst geç bağlama yapıyor; constConfig ve switchDispatch erken bağlama yapıyor.</dd>
     <dt>Call graph</dt>
     <dd>Hangi fonksiyonun hangi fonksiyonu çağırdığını gösteren grafik. Stack analizi ve özyineleme kontrolü (MISRA 17.2) buna dayanır.</dd>
     <dt>Array smashing</dt>
@@ -469,15 +463,13 @@ ret = ModuleMgr_Cfg_Write(id, value);</code></pre>
     <dd>Ömrü bitmiş bir nesneyi göstermeye devam eden pointer.</dd>
     <dt><code>const</code>'un konumu</dt>
     <dd><code>const T *p</code> gösterilen veriyi sabitler; <code>T * const p</code> pointer'ın kendisini sabitler. <code>const</code> makine kodu üretmez, sadece derleyicinin kontrolüdür. Ama veriyi flash'a koyar ve statik analize değerin değişmeyeceğini garanti eder.</dd>
-    <dt>Dependency inversion</dt>
-    <dd>Alt seviyedeki modülün sözleşmeyi kendisinin tanımlaması ve üst seviyedeki tarafın buna uyması (A'daki <code>extern</code> tablo).</dd>
     <dt>Post-build konfigürasyon</dt>
-    <dd>Konfigürasyonun modüle Init parametresi olarak verilmesi: <code>Xxx_Init(const Xxx_ConfigType *)</code>. A2'deki yöntem.</dd>
+    <dd>Konfigürasyonun modüle Init parametresi olarak verilmesi: <code>Xxx_Init(const Xxx_ConfigType *)</code>. constConfig'deki yöntem.</dd>
   </dl>
 </section>
 
 <footer>
-  <p>Kod örnekleri repodaki varyantların kısaltılmış halleridir. <a class="top" href="#bas">↑ Başa dön</a></p>
+  <p>Kod örnekleri repodaki örneklerin kısaltılmış halleridir. <a class="top" href="#bas">↑ Başa dön</a></p>
 </footer>
 
 </div>

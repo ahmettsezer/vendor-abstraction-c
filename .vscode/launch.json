@@ -2,17 +2,17 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug variant 0 - runtime register (gdb)",
+            "name": "Debug runtimeRegister (runtime register)",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/demo0.exe",
+            "program": "${workspaceFolder}/build/demo_runtimeReg.exe",
             "args": [],
-            "cwd": "${workspaceFolder}/variant0_runtimeReg",
+            "cwd": "${workspaceFolder}/runtimeRegister",
             "stopAtEntry": true,
             "externalConsole": true,
             "MIMode": "gdb",
             "miDebuggerPath": "C:/MinGW/bin/gdb.exe",
-            "preLaunchTask": "build variant0 (debug)",
+            "preLaunchTask": "build runtimeRegister",
             "setupCommands": [
                 {
                     "text": "-enable-pretty-printing",
@@ -21,17 +21,17 @@
             ]
         },
         {
-            "name": "Debug variant 0c - runtime register const (gdb)",
+            "name": "Debug runtimeRegisterConst (runtime register + const tables)",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/demo0c.exe",
+            "program": "${workspaceFolder}/build/demo_runtimeRegConst.exe",
             "args": [],
-            "cwd": "${workspaceFolder}/variant0c_runtimeRegConst",
+            "cwd": "${workspaceFolder}/runtimeRegisterConst",
             "stopAtEntry": true,
             "externalConsole": true,
             "MIMode": "gdb",
             "miDebuggerPath": "C:/MinGW/bin/gdb.exe",
-            "preLaunchTask": "build variant0c (debug)",
+            "preLaunchTask": "build runtimeRegisterConst",
             "setupCommands": [
                 {
                     "text": "-enable-pretty-printing",
@@ -40,17 +40,17 @@
             ]
         },
         {
-            "name": "Debug variant A - const config (gdb)",
+            "name": "Debug constConfig (const config via Init)",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/demoA.exe",
+            "program": "${workspaceFolder}/build/demo_constConfig.exe",
             "args": [],
-            "cwd": "${workspaceFolder}/variantA_constCfg",
+            "cwd": "${workspaceFolder}/constConfig",
             "stopAtEntry": true,
             "externalConsole": true,
             "MIMode": "gdb",
             "miDebuggerPath": "C:/MinGW/bin/gdb.exe",
-            "preLaunchTask": "build variantA (debug)",
+            "preLaunchTask": "build constConfig",
             "setupCommands": [
                 {
                     "text": "-enable-pretty-printing",
@@ -59,36 +59,17 @@
             ]
         },
         {
-            "name": "Debug variant A2 - config param (gdb)",
+            "name": "Debug switchDispatch (switch dispatch)",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/demoA2.exe",
+            "program": "${workspaceFolder}/build/demo_switch.exe",
             "args": [],
-            "cwd": "${workspaceFolder}/variantA2_cfgParam",
+            "cwd": "${workspaceFolder}/switchDispatch",
             "stopAtEntry": true,
             "externalConsole": true,
             "MIMode": "gdb",
             "miDebuggerPath": "C:/MinGW/bin/gdb.exe",
-            "preLaunchTask": "build variantA2 (debug)",
-            "setupCommands": [
-                {
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
-        },
-        {
-            "name": "Debug variant B - switch dispatch (gdb)",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/build/demoB.exe",
-            "args": [],
-            "cwd": "${workspaceFolder}/variantB_switch",
-            "stopAtEntry": true,
-            "externalConsole": true,
-            "MIMode": "gdb",
-            "miDebuggerPath": "C:/MinGW/bin/gdb.exe",
-            "preLaunchTask": "build variantB (debug)",
+            "preLaunchTask": "build switchDispatch",
             "setupCommands": [
                 {
                     "text": "-enable-pretty-printing",

@@ -17,7 +17,7 @@
             }
         },
         {
-            "label": "build variant0 (debug)",
+            "label": "build runtimeRegister",
             "type": "process",
             "command": "C:/MinGW/bin/gcc.exe",
             "args": [
@@ -37,23 +37,23 @@
                 "integrator/Integrator_Cfg.c",
                 "integrator/main.c",
                 "-o",
-                "../build/demo0.exe"
+                "../build/demo_runtimeReg.exe"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/variant0_runtimeReg"
+                "cwd": "${workspaceFolder}/runtimeRegister"
             },
             "dependsOn": "mkdir build",
             "problemMatcher": {
                 "base": "$gcc",
                 "fileLocation": [
                     "relative",
-                    "${workspaceFolder}/variant0_runtimeReg"
+                    "${workspaceFolder}/runtimeRegister"
                 ]
             },
             "group": "build"
         },
         {
-            "label": "build variant0c (debug)",
+            "label": "build runtimeRegisterConst",
             "type": "process",
             "command": "C:/MinGW/bin/gcc.exe",
             "args": [
@@ -73,23 +73,59 @@
                 "integrator/Integrator_Cfg.c",
                 "integrator/main.c",
                 "-o",
-                "../build/demo0c.exe"
+                "../build/demo_runtimeRegConst.exe"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/variant0c_runtimeRegConst"
+                "cwd": "${workspaceFolder}/runtimeRegisterConst"
             },
             "dependsOn": "mkdir build",
             "problemMatcher": {
                 "base": "$gcc",
                 "fileLocation": [
                     "relative",
-                    "${workspaceFolder}/variant0c_runtimeRegConst"
+                    "${workspaceFolder}/runtimeRegisterConst"
                 ]
             },
             "group": "build"
         },
         {
-            "label": "build variantA (debug)",
+            "label": "build constConfig",
+            "type": "process",
+            "command": "C:/MinGW/bin/gcc.exe",
+            "args": [
+                "-std=c99",
+                "-Wall",
+                "-Wextra",
+                "-Wpedantic",
+                "-O0",
+                "-g3",
+                "-ImoduleMgr",
+                "-Ivendors/vendorA",
+                "-Ivendors/vendorB",
+                "-Iintegrator",
+                "moduleMgr/ModuleMgr.c",
+                "vendors/vendorA/VendorA.c",
+                "vendors/vendorB/VendorB.c",
+                "integrator/Integrator_Cfg.c",
+                "integrator/main.c",
+                "-o",
+                "../build/demo_constConfig.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/constConfig"
+            },
+            "dependsOn": "mkdir build",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}/constConfig"
+                ]
+            },
+            "group": "build"
+        },
+        {
+            "label": "build switchDispatch",
             "type": "process",
             "command": "C:/MinGW/bin/gcc.exe",
             "args": [
@@ -108,100 +144,28 @@
                 "integrator/ModuleMgr_Cfg.c",
                 "integrator/main.c",
                 "-o",
-                "../build/demoA.exe"
+                "../build/demo_switch.exe"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/variantA_constCfg"
+                "cwd": "${workspaceFolder}/switchDispatch"
             },
             "dependsOn": "mkdir build",
             "problemMatcher": {
                 "base": "$gcc",
                 "fileLocation": [
                     "relative",
-                    "${workspaceFolder}/variantA_constCfg"
+                    "${workspaceFolder}/switchDispatch"
                 ]
             },
             "group": "build"
         },
         {
-            "label": "build variantA2 (debug)",
-            "type": "process",
-            "command": "C:/MinGW/bin/gcc.exe",
-            "args": [
-                "-std=c99",
-                "-Wall",
-                "-Wextra",
-                "-Wpedantic",
-                "-O0",
-                "-g3",
-                "-ImoduleMgr",
-                "-Ivendors/vendorA",
-                "-Ivendors/vendorB",
-                "-Iintegrator",
-                "moduleMgr/ModuleMgr.c",
-                "vendors/vendorA/VendorA.c",
-                "vendors/vendorB/VendorB.c",
-                "integrator/Integrator_Cfg.c",
-                "integrator/main.c",
-                "-o",
-                "../build/demoA2.exe"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/variantA2_cfgParam"
-            },
-            "dependsOn": "mkdir build",
-            "problemMatcher": {
-                "base": "$gcc",
-                "fileLocation": [
-                    "relative",
-                    "${workspaceFolder}/variantA2_cfgParam"
-                ]
-            },
-            "group": "build"
-        },
-        {
-            "label": "build variantB (debug)",
-            "type": "process",
-            "command": "C:/MinGW/bin/gcc.exe",
-            "args": [
-                "-std=c99",
-                "-Wall",
-                "-Wextra",
-                "-Wpedantic",
-                "-O0",
-                "-g3",
-                "-ImoduleMgr",
-                "-Ivendors/vendorA",
-                "-Ivendors/vendorB",
-                "moduleMgr/ModuleMgr.c",
-                "vendors/vendorA/VendorA.c",
-                "vendors/vendorB/VendorB.c",
-                "integrator/ModuleMgr_Cfg.c",
-                "integrator/main.c",
-                "-o",
-                "../build/demoB.exe"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/variantB_switch"
-            },
-            "dependsOn": "mkdir build",
-            "problemMatcher": {
-                "base": "$gcc",
-                "fileLocation": [
-                    "relative",
-                    "${workspaceFolder}/variantB_switch"
-                ]
-            },
-            "group": "build"
-        },
-        {
-            "label": "build all variants",
+            "label": "build all",
             "dependsOn": [
-                "build variant0 (debug)",
-                "build variant0c (debug)",
-                "build variantA (debug)",
-                "build variantA2 (debug)",
-                "build variantB (debug)"
+                "build runtimeRegister",
+                "build runtimeRegisterConst",
+                "build constConfig",
+                "build switchDispatch"
             ],
             "dependsOrder": "sequence",
             "problemMatcher": [],

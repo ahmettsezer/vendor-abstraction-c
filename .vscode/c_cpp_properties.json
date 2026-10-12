@@ -1,61 +1,50 @@
 {
     "configurations": [
         {
-            "name": "variant0",
+            "name": "runtimeRegister",
             "compilerPath": "C:/MinGW/bin/gcc.exe",
             "cStandard": "c99",
             "intelliSenseMode": "windows-gcc-x86",
             "includePath": [
-                "${workspaceFolder}/variant0_runtimeReg/moduleMgr",
-                "${workspaceFolder}/variant0_runtimeReg/vendors/vendorA",
-                "${workspaceFolder}/variant0_runtimeReg/vendors/vendorB",
-                "${workspaceFolder}/variant0_runtimeReg/integrator"
+                "${workspaceFolder}/runtimeRegister/moduleMgr",
+                "${workspaceFolder}/runtimeRegister/vendors/vendorA",
+                "${workspaceFolder}/runtimeRegister/vendors/vendorB",
+                "${workspaceFolder}/runtimeRegister/integrator"
             ]
         },
         {
-            "name": "variant0c",
+            "name": "runtimeRegisterConst",
             "compilerPath": "C:/MinGW/bin/gcc.exe",
             "cStandard": "c99",
             "intelliSenseMode": "windows-gcc-x86",
             "includePath": [
-                "${workspaceFolder}/variant0c_runtimeRegConst/moduleMgr",
-                "${workspaceFolder}/variant0c_runtimeRegConst/vendors/vendorA",
-                "${workspaceFolder}/variant0c_runtimeRegConst/vendors/vendorB",
-                "${workspaceFolder}/variant0c_runtimeRegConst/integrator"
+                "${workspaceFolder}/runtimeRegisterConst/moduleMgr",
+                "${workspaceFolder}/runtimeRegisterConst/vendors/vendorA",
+                "${workspaceFolder}/runtimeRegisterConst/vendors/vendorB",
+                "${workspaceFolder}/runtimeRegisterConst/integrator"
             ]
         },
         {
-            "name": "variantA",
+            "name": "constConfig",
             "compilerPath": "C:/MinGW/bin/gcc.exe",
             "cStandard": "c99",
             "intelliSenseMode": "windows-gcc-x86",
             "includePath": [
-                "${workspaceFolder}/variantA_constCfg/moduleMgr",
-                "${workspaceFolder}/variantA_constCfg/vendors/vendorA",
-                "${workspaceFolder}/variantA_constCfg/vendors/vendorB"
+                "${workspaceFolder}/constConfig/moduleMgr",
+                "${workspaceFolder}/constConfig/vendors/vendorA",
+                "${workspaceFolder}/constConfig/vendors/vendorB",
+                "${workspaceFolder}/constConfig/integrator"
             ]
         },
         {
-            "name": "variantA2",
+            "name": "switchDispatch",
             "compilerPath": "C:/MinGW/bin/gcc.exe",
             "cStandard": "c99",
             "intelliSenseMode": "windows-gcc-x86",
             "includePath": [
-                "${workspaceFolder}/variantA2_cfgParam/moduleMgr",
-                "${workspaceFolder}/variantA2_cfgParam/vendors/vendorA",
-                "${workspaceFolder}/variantA2_cfgParam/vendors/vendorB",
-                "${workspaceFolder}/variantA2_cfgParam/integrator"
-            ]
-        },
-        {
-            "name": "variantB",
-            "compilerPath": "C:/MinGW/bin/gcc.exe",
-            "cStandard": "c99",
-            "intelliSenseMode": "windows-gcc-x86",
-            "includePath": [
-                "${workspaceFolder}/variantB_switch/moduleMgr",
-                "${workspaceFolder}/variantB_switch/vendors/vendorA",
-                "${workspaceFolder}/variantB_switch/vendors/vendorB"
+                "${workspaceFolder}/switchDispatch/moduleMgr",
+                "${workspaceFolder}/switchDispatch/vendors/vendorA",
+                "${workspaceFolder}/switchDispatch/vendors/vendorB"
             ]
         }
     ],
