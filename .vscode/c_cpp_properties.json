@@ -13,6 +13,18 @@
             ]
         },
         {
+            "name": "variant0c",
+            "compilerPath": "C:/MinGW/bin/gcc.exe",
+            "cStandard": "c99",
+            "intelliSenseMode": "windows-gcc-x86",
+            "includePath": [
+                "${workspaceFolder}/variant0c_runtimeRegConst/moduleMgr",
+                "${workspaceFolder}/variant0c_runtimeRegConst/vendors/vendorA",
+                "${workspaceFolder}/variant0c_runtimeRegConst/vendors/vendorB",
+                "${workspaceFolder}/variant0c_runtimeRegConst/integrator"
+            ]
+        },
+        {
             "name": "variantA",
             "compilerPath": "C:/MinGW/bin/gcc.exe",
             "cStandard": "c99",

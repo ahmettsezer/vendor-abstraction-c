@@ -53,6 +53,42 @@
             "group": "build"
         },
         {
+            "label": "build variant0c (debug)",
+            "type": "process",
+            "command": "C:/MinGW/bin/gcc.exe",
+            "args": [
+                "-std=c99",
+                "-Wall",
+                "-Wextra",
+                "-Wpedantic",
+                "-O0",
+                "-g3",
+                "-ImoduleMgr",
+                "-Ivendors/vendorA",
+                "-Ivendors/vendorB",
+                "-Iintegrator",
+                "moduleMgr/ModuleMgr.c",
+                "vendors/vendorA/VendorA.c",
+                "vendors/vendorB/VendorB.c",
+                "integrator/Integrator_Cfg.c",
+                "integrator/main.c",
+                "-o",
+                "../build/demo0c.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/variant0c_runtimeRegConst"
+            },
+            "dependsOn": "mkdir build",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}/variant0c_runtimeRegConst"
+                ]
+            },
+            "group": "build"
+        },
+        {
             "label": "build variantA (debug)",
             "type": "process",
             "command": "C:/MinGW/bin/gcc.exe",
@@ -162,6 +198,7 @@
             "label": "build all variants",
             "dependsOn": [
                 "build variant0 (debug)",
+                "build variant0c (debug)",
                 "build variantA (debug)",
                 "build variantA2 (debug)",
                 "build variantB (debug)"

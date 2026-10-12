@@ -1,7 +1,7 @@
 # vendor-abstraction-c
 
 C dilinde, vendor'lardan bagimsiz bir modul yoneticisi (**ModuleMgr**) ve bu yoneticinin
-**dort farkli dagitim (dispatch) yontemi**. Varyantlar statik analize uygunluk acisindan
+**bes farkli dagitim (dispatch) varyanti**. Varyantlar statik analize uygunluk acisindan
 (MISRA C, call graph, stack analizi, formel kanit) karsilastirilmistir.
 
 ## Mimari
@@ -24,6 +24,7 @@ Ornek vendor'lar ayni arayuzu sunar ama farkli davranir:
 | Klasor | Dagitim yontemi | Fonksiyon pointer | Cagri hedefi derleme aninda belli mi | ModuleMgr'in link bagimliligi |
 |---|---|---|---|---|
 | [`variant0_runtimeReg`](variant0_runtimeReg/) | Vendor kendini runtime'da `Register` eder | Var | Hayir | Yok |
+| [`variant0c_runtimeRegConst`](variant0c_runtimeRegConst/) | variant0 ile ayni, ama tablolar `static const` (flash) ve ModuleMgr `const` pointer tutar | Var | Kume olarak (A veya B) | Yok |
 | [`variantA_constCfg`](variantA_constCfg/) | Entegratorun `const` tablosu, `extern` sembol | Var | Evet | `g_moduleMgrCfg` |
 | [`variantA2_cfgParam`](variantA2_cfgParam/) | `const` tablo, `ModuleMgr_Init(&cfg)` parametresi | Var | Evet | Yok |
 | [`variantB_switch`](variantB_switch/) | Entegratorun `switch` dagiticisi | Yok | Evet | 5 dagitici fonksiyon |
@@ -33,6 +34,9 @@ Ornek vendor'lar ayni arayuzu sunar ama farkli davranir:
 - **variant0:** Cagri zinciri runtime'da, RAM'deki bir kayit tablosu uzerinden kurulur.
   Araclar `id <-> fonksiyon` eslesmesini kaybeder; call graph ve stack analizi icin
   elle annotation gerekir.
+- **variant0c:** variant0'in `const` hali. Tablolarin ici (hangi alan hangi fonksiyonu
+  gosteriyor) derleme aninda kesin ve flash'ta; ModuleMgr tabloyu degistiremez (MISRA 8.13).
+  Ama kayit dizisi hala runtime'da doldugu icin `id <-> tablo` eslesmesi analizde kaybolur.
 - **variantA / A2:** Fonksiyon pointer'lari kalir, ama hedefleri flash'taki `const`
   tablonun tanimlama satirindan kesin okunur. A2, A'nin link bagimliligini kaldirir
   (kural: `ModuleMgr_Init` tek yerden, bir kez cagrilir).
@@ -65,7 +69,7 @@ yerine `integrator/ModuleMgr_Cfg.c` derlenir ve `-Iintegrator` parametresi gerek
 
 ### VS Code
 
-- **Ctrl+Shift+B:** dort varyanti birden derler.
+- **Ctrl+Shift+B:** tum varyantlari birden derler.
 - **F5:** her varyant icin ayri bir gdb debug konfigurasyonu vardir.
-- **IntelliSense:** dort varyantta da ayni isimli header'lar bulundugu icin her varyantin
+- **IntelliSense:** tum varyantlarda ayni isimli header'lar bulundugu icin her varyantin
   ayri bir konfigurasyonu vardir; calistigin varyanti durum cubugundan secmelisin.
