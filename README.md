@@ -43,6 +43,11 @@ A, A2 ve B'de ek olarak su MISRA C:2012 kurallarina uyulmustur: 15.5 (tek cikis 
 16.3 (`switch` case'leri `break` ile biter), 17.7 (donus degerleri kullanilir veya `(void)`
 ile yok sayilir). Demo amacli `printf` kullanimi Rule 21.6 sapmasidir.
 
+## Dokuman
+
+Varyantlarin yapisi, kullanimi, artilari, eksileri ve statik analiz degerlendirmesi:
+[`docs/mimari-notlari.html`](docs/mimari-notlari.html) (tarayicida acin; telefona uygun).
+
 ## Derleme ve calistirma
 
 Gereken: GCC (C99). Gelistirme MinGW GCC 6.3 ile yapildi.

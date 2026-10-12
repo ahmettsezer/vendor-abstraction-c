@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>vendor-abstraction-c Notları</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: tek sütun "datasheet" — numaralı bölümler, her varyant aynı iskelette (fikir, yapı, kullanım, artı/eksi, analiz); telefonda tek sütun. */
+:root {
+  --bg: #f6f7f5;
+  --surface: #ffffff;
+  --fg: #1b2420;
+  --muted: #5a6661;
+  --line: #d7ddd9;
+  --accent: #1d6b57;
+  --accent-soft: #e3efea;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0dc;
+  --bad: #a3332b;
+  --bad-soft: #f8e6e4;
+  --good: #2c7a3f;
+  --good-soft: #e5f2e7;
+  --code-bg: #eef1ee;
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111614; --surface: #171e1b; --fg: #e3e9e6; --muted: #98a59f; --line: #2b3632;
+    --accent: #5cc3a3; --accent-soft: #1b2e28; --warn: #e3a64a; --warn-soft: #2e2516;
+    --bad: #ef8a80; --bad-soft: #2f1b19; --good: #7fcf8f; --good-soft: #1a2b1d;
+    --code-bg: #1d2522; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111614; --surface: #171e1b; --fg: #e3e9e6; --muted: #98a59f; --line: #2b3632;
+  --accent: #5cc3a3; --accent-soft: #1b2e28; --warn: #e3a64a; --warn-soft: #2e2516;
+  --bad: #ef8a80; --bad-soft: #2f1b19; --good: #7fcf8f; --good-soft: #1a2b1d;
+  --code-bg: #1d2522; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.65;
+  margin: 0; padding-inline: 16px; padding-block: 0 64px;
+}
+.wrap { max-width: 780px; margin: 0 auto; }
+
+header.doc { padding-block: 40px 28px; border-bottom: 2px solid var(--fg); margin-bottom: 28px; }
+.part { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(28px, 7vw, 40px); line-height: 1.1; margin: 10px 0 12px; text-wrap: balance; }
+.lede { color: var(--muted); margin: 0 0 18px; max-width: 62ch; }
+.meta { font-family: var(--font-mono); font-size: 13px; }
+.meta span { color: var(--muted); }
+
+nav.toc { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; margin-bottom: 40px; }
+nav.toc h2 { font-size: 13px; margin: 0 0 8px; font-family: var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+nav.toc ol { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 2px; }
+nav.toc ol ol { padding-left: 22px; margin-block: 2px 6px; }
+nav.toc a { color: var(--fg); text-decoration: none; display: block; padding: 3px 0; }
+nav.toc a:hover, nav.toc a:focus-visible { color: var(--accent); }
+nav.toc .n { font-family: var(--font-mono); color: var(--muted); font-size: 13px; display: inline-block; min-width: 2.6em; }
+
+section.sec { margin-bottom: 56px; }
+h2.sec-title { font-family: var(--font-display); font-weight: 700; font-size: 26px; line-height: 1.2; margin: 0 0 16px; padding-top: 8px; border-top: 1px solid var(--line); display: flex; gap: 12px; align-items: baseline; text-wrap: balance; }
+h2.sec-title .n { font-family: var(--font-mono); font-size: 15px; color: var(--accent); font-weight: 500; }
+h3 { font-family: var(--font-display); font-weight: 600; font-size: 19px; margin: 26px 0 8px; text-wrap: balance; }
+h4 { font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 20px 0 8px; }
+p { margin: 0 0 12px; max-width: 68ch; }
+ul, ol { padding-left: 1.3em; margin: 0 0 12px; }
+li { margin-bottom: 4px; }
+a { color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+strong { font-weight: 600; }
+code { font-family: var(--font-mono); font-size: .86em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+
+pre { font-family: var(--font-mono); font-size: 13px; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; overflow-x: auto; margin: 0 0 14px; }
+pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+.c { color: var(--muted); }
+.k { color: var(--accent); }
+
+/* ---------- variant block ---------- */
+article.variant { margin-bottom: 52px; }
+.v-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-bottom: 10px; }
+.v-head h3 { margin: 0; font-size: 22px; }
+.v-head .folder { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+.idea { font-size: 17px; margin-bottom: 14px; }
+
+.pc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 4px 0 16px; }
+.pc > div { border-radius: 6px; padding: 12px 14px; min-width: 0; }
+.pc .plus { background: var(--good-soft); }
+.pc .minus { background: var(--bad-soft); }
+.pc h5 { margin: 0 0 6px; font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; }
+.pc .plus h5 { color: var(--good); }
+.pc .minus h5 { color: var(--bad); }
+.pc ul { margin: 0; padding-left: 1.1em; font-size: 15px; line-height: 1.5; }
+.pc li { margin-bottom: 6px; }
+.pc li:last-child { margin-bottom: 0; }
+@media (max-width: 600px) { .pc { grid-template-columns: 1fr; } }
+
+.sa { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 12px 14px; }
+.sa .grade { display: inline-block; font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: .04em; padding: 2px 8px; border-radius: 3px; margin-bottom: 6px; }
+.grade.g-bad { background: var(--bad-soft); color: var(--bad); }
+.grade.g-ok { background: var(--good-soft); color: var(--good); }
+.grade.g-best { background: var(--accent-soft); color: var(--accent); }
+.sa p:last-child { margin-bottom: 0; }
+
+.note { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 4px 4px 0; margin: 0 0 14px; }
+.note.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+.note p:last-child { margin-bottom: 0; }
+.note .lbl { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; display: block; margin-bottom: 2px; color: var(--accent); }
+.note.warn .lbl { color: var(--warn); }
+
+.tbl { overflow-x: auto; margin: 0 0 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.45; }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: .03em; color: var(--muted); background: var(--code-bg); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.y { color: var(--good); font-weight: 600; }
+td.n { color: var(--bad); font-weight: 600; }
+td.m { color: var(--warn); font-weight: 600; }
+.wide table { min-width: 620px; }
+
+.arch { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0 0 16px; }
+.arch .box { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px; min-width: 0; }
+.arch .box b { font-family: var(--font-display); font-size: 17px; display: block; margin-bottom: 4px; }
+.arch .box span { font-size: 14px; color: var(--muted); display: block; line-height: 1.45; }
+.arch .box.mm { border-color: var(--accent); }
+@media (max-width: 560px) { .arch { grid-template-columns: 1fr; } }
+
+.pick { display: grid; gap: 10px; }
+.pick > div { display: grid; grid-template-columns: 7.5em minmax(0, 1fr); gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; align-items: baseline; }
+.pick b { font-family: var(--font-display); font-size: 17px; }
+.pick span { font-size: 15px; }
+@media (max-width: 480px) { .pick > div { grid-template-columns: 1fr; gap: 2px; } }
+
+dl.gloss { margin: 0; display: grid; gap: 14px; }
+dl.gloss dt { font-weight: 600; }
+dl.gloss dd { margin: 2px 0 0; max-width: 68ch; }
+
+.top { font-family: var(--font-mono); font-size: 12px; text-decoration: none; color: var(--muted); }
+footer { border-top: 1px solid var(--line); padding-top: 16px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+
+
+<div class="wrap" id="bas">
+
+<header class="doc">
+  <div class="part">Mimari notu · C / gömülü · Ekim 2026</div>
+  <h1>vendor-abstraction-c Notları</h1>
+  <p class="lede">Aynı Entegratör, Vendor ve ModuleMgr mimarisinin dört farklı uygulaması: nasıl kuruldukları, nasıl kullanıldıkları, artıları, eksileri ve statik analize ne kadar uygun oldukları.</p>
+  <div class="meta"><span>Repo:</span> <a href="https://github.com/ahmettsezer/vendor-abstraction-c">ahmettsezer/vendor-abstraction-c</a></div>
+</header>
+
+<nav class="toc" aria-label="İçindekiler">
+  <h2>İçindekiler</h2>
+  <ol>
+    <li><a href="#mimari"><span class="n">1</span>Ortak mimari</a></li>
+    <li><a href="#temel"><span class="n">2</span>Statik analiz neye bakar</a></li>
+    <li><a href="#varyantlar"><span class="n">3</span>Dört varyant</a>
+      <ol>
+        <li><a href="#v0"><span class="n">3.1</span>variant0: Çalışma zamanında kayıt</a></li>
+        <li><a href="#vA"><span class="n">3.2</span>A: const konfigürasyon, extern</a></li>
+        <li><a href="#vA2"><span class="n">3.3</span>A2: const konfigürasyon, Init parametresi</a></li>
+        <li><a href="#vB"><span class="n">3.4</span>B: switch ile dağıtım</a></li>
+      </ol>
+    </li>
+    <li><a href="#karsilastirma"><span class="n">4</span>Karşılaştırma</a></li>
+    <li><a href="#secim"><span class="n">5</span>Hangisi ne zaman</a></li>
+    <li><a href="#sozluk"><span class="n">6</span>Kavramlar</a></li>
+  </ol>
+</nav>
+
+<!-- ================================================================== -->
+<section class="sec" id="mimari">
+  <h2 class="sec-title"><span class="n">1</span>Ortak mimari</h2>
+
+  <div class="arch">
+    <div class="box"><b>Entegratör</b><span>Projeye hangi vendor'ların dahil edileceğine karar verir ve onları init eder.</span></div>
+    <div class="box"><b>Vendor</b><span>Ortak arayüzü kendine göre implement eder. Birden fazla vendor olabilir.</span></div>
+    <div class="box mm"><b>ModuleMgr</b><span>Vendor'ları tanımadan, <code>VendorId</code> üzerinden ilgili vendor'un fonksiyonunu çağırır.</span></div>
+  </div>
+
+  <p>Vendor'ların sunduğu arayüz dört varyantta da aynı dört işlemden oluşuyor:</p>
+<pre><code>read      (uint32_t *pValue)   <span class="c">// değeri oku</span>
+write     (uint32_t value)     <span class="c">// değer yaz</span>
+execute   (uint32_t cmd)       <span class="c">// START / STOP / RESET</span>
+getStatus (void)               <span class="c">// IDLE / BUSY</span></code></pre>
+
+  <p>Örnekteki iki vendor aynı arayüzü sunar ama farklı davranır: <strong>VendorA</strong> kendisine yazılan son değeri saklar, <strong>VendorB</strong> ise yazılan değerleri toplar. ModuleMgr aynı çağrıyı yapar, sonucu vendor belirler. Dört varyant da aynı demo senaryosunu çalıştırır ve aynı sonucu verir (A = 41, B = 61).</p>
+
+  <p>Varyantların birbirinden farkı tek bir soruya verdikleri cevapta: <strong>ModuleMgr, bir VendorId için hangi fonksiyonu çağıracağını nereden öğreniyor?</strong></p>
+</section>
+
+<!-- ================================================================== -->
+<section class="sec" id="temel">
+  <h2 class="sec-title"><span class="n">2</span>Statik analiz neye bakar</h2>
+  <p>Statik analiz, kodu <strong>çalıştırmadan</strong> kaynak koda bakarak hata ve kural ihlali arama işidir. Test sadece denenen yolları görür; statik analiz ise kodun alabileceği bütün yolları düşünmeye çalışır.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Seviye</th><th>Ne yapar</th><th>Örnek araçlar</th></tr></thead>
+    <tbody>
+      <tr><td>Kodlama kuralı</td><td>MISRA C ve CERT C uyumunu kontrol eder</td><td>cppcheck + MISRA, PC-lint, Helix QAC</td></tr>
+      <tr><td>Hata avcılığı</td><td>NULL dereference, ilk değer verilmemiş değişken, taşma, ölü kod</td><td>Coverity, Polyspace Bug Finder</td></tr>
+      <tr><td>Formel kanıt</td><td>Hiçbir girdiyle çalışma zamanı hatası olmayacağını kanıtlar</td><td>Polyspace Code Prover, Astrée</td></tr>
+    </tbody>
+  </table></div>
+  <p>Güvenlik standartları (ISO 26262, IEC 61508) bunlara ek olarak <strong>call graph</strong>, <strong>stack analizi</strong> ve <strong>freedom from interference</strong> ister. Bu analizlerin hepsi aynı bilgiye dayanır: <strong>hangi fonksiyonun hangi fonksiyonu çağırdığı derleme anında belli olmalı.</strong></p>
+  <p>Bu mimarideki kritik satır şu:</p>
+<pre><code>ret = pIfc-&gt;writeIfc(value);    <span class="c">// statik analiz aracı: "bu satır hangi fonksiyonu çağırıyor?"</span></code></pre>
+  <p>Varyantlar bu sorunun cevabını farklı yerlere koyuyor. Cevap ne kadar erken (derleme anında) ve ne kadar tek bir yerde belli oluyorsa, analiz o kadar kolaylaşıyor.</p>
+</section>
+
+<!-- ================================================================== -->
+<section class="sec" id="varyantlar">
+  <h2 class="sec-title"><span class="n">3</span>Dört varyant</h2>
+
+  <!-- ---------------- variant0 ---------------- -->
+  <article class="variant" id="v0">
+    <div class="v-head"><h3>variant0: Çalışma zamanında kayıt</h3><span class="folder">variant0_runtimeReg/</span></div>
+    <p class="idea">Her vendor, kendi Init fonksiyonunda arayüz tablosunu doldurup ModuleMgr'a kendini kaydeder. ModuleMgr bu kayıtları RAM'deki bir dizide tutar.</p>
+
+    <h4>Yapı ve akış</h4>
+<pre><code><span class="c">/* Vendor */</span>
+static VendorIfc_t s_vendorAIfc;            <span class="c">// static: ModuleMgr adresini saklıyor</span>
+
+MM_Ret_t VendorA_Init(void)
+{
+    s_vendorAIfc.writeIfc = vendorA_write;  <span class="c">// çalışma zamanında doldurulur</span>
+    ...
+    return ModuleMgr_Register(VENDOR_A_ID, &amp;s_vendorAIfc);
+}
+
+<span class="c">/* ModuleMgr */</span>
+static VendorEntry_t s_vendors[MAX];        <span class="c">// RAM: { used, id, pIfc }</span>
+...
+ret = pIfc-&gt;writeIfc(value);                <span class="c">// findEntry(id) ile bulunan slot</span></code></pre>
+    <p><strong>Yeni vendor eklemek:</strong> Vendor kendi Init'inde kaydolur; entegratör sadece init tablosuna o Init'i ekler.</p>
+    <div class="note warn"><span class="lbl">static şart</span><p>ModuleMgr tablonun kopyasını değil adresini saklıyor. Tablo <code>static</code> olmayan bir lokal değişken olsaydı Init'ten çıkınca geçersizleşir ve ModuleMgr'ın elinde boşa işaret eden bir pointer kalırdı (dangling pointer). Tablonun dosya seviyesinde ya da fonksiyon içinde tanımlanması fark etmez; önemli olan program boyunca yaşaması.</p></div>
+
+    <div class="pc">
+      <div class="plus"><h5>Artıları</h5><ul>
+        <li>Fikir doğal ve esnek: vendor kendini kaydeder, entegratör sadece Init çağırır.</li>
+        <li>ModuleMgr'ın kimseye link bağımlılığı yok.</li>
+        <li>Çalışma sırasında vendor eklenip çıkarılabilir (<code>Unregister</code>).</li>
+        <li>Vendor fonksiyonlarının hepsi <code>static</code>; dışarıya sadece Init açık.</li>
+      </ul></div>
+      <div class="minus"><h5>Eksileri</h5><ul>
+        <li>ID ile fonksiyon eşleşmesi sadece çalışma zamanında kuruluyor; statik analiz bu bağı göremiyor.</li>
+        <li>Tablolar RAM'de. Bir bellek taşması fonksiyon pointer'ını bozarsa program rastgele bir adrese atlar.</li>
+        <li>Aynı ID iki kez kullanılırsa ya da kayıttan önce çağrı yapılırsa, hata ancak çalışma zamanında ortaya çıkar.</li>
+        <li>Tablo Init içinde doldurulduğu için <code>const</code> olamıyor, dolayısıyla flash'a konamıyor.</li>
+      </ul></div>
+    </div>
+
+    <div class="sa">
+      <span class="grade g-bad">Statik analiz: zor</span>
+      <p>Çağrı zinciri dört dosyaya yayılmış ve tamamen çalışma zamanında kuruluyor: <code>s_vendors[i].pIfc</code> → <code>Register</code> → <code>VendorA_Init</code> → çalışma zamanında doldurulan tablo. Call graph bu noktada kopuyor, stack analizi elle annotation istiyor, formel kanıt araçları da "kanıtlayamadım" uyarılarıyla doluyor. ModuleMgr'ın const olmayan pointer'ları MISRA 8.13'ü (advisory) da ihlal ediyor.</p>
+    </div>
+
+    <h4>Neden "sadece const yapmak" yetmiyor</h4>
+<pre><code>Halka 1:  s_vendorAIfc.writeIfc ──► vendorA_write   <span class="c">// tablonun içi: const bunu çözer</span>
+Halka 2:  s_vendors[0].pIfc     ──► &amp;s_vendorAIfc  <span class="c">// kayıt dizisi: const bunu çözmez</span></code></pre>
+    <p>Tablolar <code>static const</code> yapılırsa araç her tablonun içeriğini tek satırdan kesin olarak okur. Ama kayıt dizisi hâlâ çalışma zamanında doluyor. Araçlar böyle bir dizinin bütün slotlarını tek bir özet halinde birleştirir (array smashing): "id alanı A veya B olabilir, pIfc alanı da A veya B olabilir". Bu özetlemede <strong>iki alan arasındaki bağ kopar</strong>. <code>findEntry(0x0A01)</code> çalışma zamanında doğru slotu bulsa bile, araç o satır için "VendorA <em>veya</em> VendorB çağrılır" der. Bu sonuç yanlış değil ama kaba. Ayrıca ModuleMgr.c tek başına analiz edildiğinde <code>Register</code>'a gelen değerler hiç bilinmez.</p>
+  </article>
+
+  <!-- ---------------- A ---------------- -->
+  <article class="variant" id="vA">
+    <div class="v-head"><h3>A: const konfigürasyon tablosu, extern sembol</h3><span class="folder">variantA_constCfg/</span></div>
+    <p class="idea">Kayıt işlemi çalışma zamanından derleme anına taşınıyor. Vendor'lar arayüz tablolarını <code>const</code> olarak dışarı açıyor; entegratör de ID ile tablo eşleşmesini <code>const</code> bir konfigürasyon tablosuna yazıyor.</p>
+
+    <h4>Yapı ve akış</h4>
+<pre><code><span class="c">/* Vendor: tablo const, tanımlandığı satırda dolu (flash) */</span>
+const VendorIfc_t VendorA_Ifc = { .writeIfc = vendorA_write, ... };
+
+<span class="c">/* ModuleMgr.h: tipi ve sembol adını ModuleMgr belirliyor */</span>
+extern const ModuleMgr_CfgEntry_t g_moduleMgrCfg[];
+
+<span class="c">/* Entegratör (ModuleMgr_Cfg.c): sembolü tanımlıyor */</span>
+const ModuleMgr_CfgEntry_t g_moduleMgrCfg[] = {
+    { VENDOR_A_ID, &amp;VendorA_Ifc },
+    { VENDOR_B_ID, &amp;VendorB_Ifc },
+};
+
+<span class="c">/* main */</span>
+VendorA_Init();  VendorB_Init();   <span class="c">// sadece vendor'ın kendi durumunu hazırlar</span>
+ModuleMgr_Init();                   <span class="c">// konfigürasyonu doğrular (NULL, tekrarlanan ID)</span></code></pre>
+    <p><strong>Yeni vendor eklemek:</strong> Konfigürasyon tablosuna bir satır ve main'e bir Init çağrısı.</p>
+
+    <div class="pc">
+      <div class="plus"><h5>Artıları</h5><ul>
+        <li>ID ile fonksiyon eşleşmesi derleme anında, tek bir satırda kesin.</li>
+        <li>Tablolar <code>const</code> ve flash'ta; çalışma sırasında bozulamaz.</li>
+        <li><code>Register</code> ve RAM'deki kayıt dizisi yok, kod daha küçük.</li>
+        <li>Vendor fonksiyonları hâlâ <code>static</code>; dışarı sadece tablo açılıyor.</li>
+        <li>Yeni vendor eklemek tek satırlık bir değişiklik.</li>
+      </ul></div>
+      <div class="minus"><h5>Eksileri</h5><ul>
+        <li>ModuleMgr, entegratörün tanımlaması gereken bir sembole (<code>g_moduleMgrCfg</code>) link seviyesinde bağımlı.</li>
+        <li>ModuleMgr tek başına link edilemiyor; unit test için sahte bir tablo tanımlamak gerekiyor.</li>
+        <li>Sembol adı sabit, bu yüzden bir binary içinde tek bir konfigürasyon olabiliyor.</li>
+        <li>Vendor kendini kaydetmiyor; vendor listesi iki yerde tutuluyor (konfigürasyon tablosu ve Init çağrıları).</li>
+      </ul></div>
+    </div>
+
+    <div class="sa">
+      <span class="grade g-ok">Statik analiz: iyi</span>
+      <p>Fonksiyon pointer'ları hâlâ var, ama pointer'ın alabileceği değerler değişmeyen tek bir tablonun tanımlama satırından okunuyor. Tüm programı analiz eden araçlar (Polyspace, Astrée) bunu tam olarak çözer; stack aracına da kesin bir hedef listesi verilebilir. ModuleMgr'da hâlâ ID ile arama yapılıyor; fark, aranan verinin bir çalışma geçmişinden değil sabit bir tanımdan gelmesi.</p>
+    </div>
+  </article>
+
+  <!-- ---------------- A2 ---------------- -->
+  <article class="variant" id="vA2">
+    <div class="v-head"><h3>A2: const konfigürasyon, Init parametresi</h3><span class="folder">variantA2_cfgParam/</span></div>
+    <p class="idea">A ile aynı <code>const</code> tablo, tek fark: konfigürasyon bir <code>extern</code> sembol yerine <code>ModuleMgr_Init</code>'e parametre olarak veriliyor. AUTOSAR'ın "post-build" konfigürasyonu da bu şekilde çalışır.</p>
+
+    <h4>Yapı ve akış</h4>
+<pre><code><span class="c">/* ModuleMgr.h: tipleri tanımlıyor, extern hiçbir şey yok */</span>
+typedef struct { const ModuleMgr_CfgEntry_t *pEntries; uint8_t count; } ModuleMgr_Config_t;
+MM_Ret_t ModuleMgr_Init(<span class="k">const</span> ModuleMgr_Config_t *pCfg);
+
+<span class="c">/* ModuleMgr.c: Init'te bir kez atanan tek pointer */</span>
+static const ModuleMgr_Config_t *s_pCfg = NULL;   <span class="c">// NULL = init edilmemiş</span>
+
+<span class="c">/* Entegratör: tablo yine const; sembol adını entegratör seçiyor */</span>
+static const ModuleMgr_CfgEntry_t s_entries[] = { { VENDOR_A_ID, &amp;VendorA_Ifc }, ... };
+const ModuleMgr_Config_t Integrator_ModuleMgrCfg = { s_entries, 2u };
+
+<span class="c">/* main */</span>
+ModuleMgr_Init(&amp;Integrator_ModuleMgrCfg);</code></pre>
+    <p><strong>Yeni vendor eklemek:</strong> A ile aynı; tabloya bir satır ve main'e bir Init çağrısı.</p>
+
+    <div class="pc">
+      <div class="plus"><h5>Artıları</h5><ul>
+        <li>A'nın bütün artıları geçerli.</li>
+        <li>ModuleMgr'ın dışarıdan beklediği hiçbir sembol yok; tek başına link edilebiliyor.</li>
+        <li>Unit test kolay: test kendi konfigürasyonunu hazırlayıp Init'e veriyor.</li>
+        <li>Konfigürasyonun adını ve yerini entegratör seçiyor.</li>
+        <li>Hatalı bir konfigürasyon asla saklanmıyor; ModuleMgr init edilmemiş durumda kalıyor.</li>
+      </ul></div>
+      <div class="minus"><h5>Eksileri</h5><ul>
+        <li>"Init tek bir yerden, bir kez çağrılır" kuralına uyulmalı ve kod bunu zorlamıyor; kontrol code review'a ya da analiz aracına kalıyor.</li>
+        <li>Erişimde bir dolaylılık daha var (<code>s_pCfg-&gt;pEntries[i]</code>).</li>
+        <li>A'daki gibi vendor kendini kaydetmiyor ve vendor listesi iki yerde tutuluyor.</li>
+      </ul></div>
+    </div>
+
+    <div class="sa">
+      <span class="grade g-ok">Statik analiz: iyi (A ile aynı)</span>
+      <p>Konfigürasyon pointer'ı çalışma zamanında atanıyor, ama variant0'daki <code>Register</code>'dan farklı olarak <strong>tek bir pointer bir kez</strong> atanıyor. ID ile vendor eşleşmesi hâlâ <code>const</code> tablonun tanımlama satırında duruyor. Tüm programı analiz eden araçlar bu atamayı rahatlıkla çözer. ModuleMgr.c tek başına analiz edildiğinde konfigürasyonun içeriği bilinmez, ama bu A'da da aynı. Init farklı yerlerden farklı konfigürasyonlarla çağrılırsa kesinlik düşer; kuralın sebebi bu.</p>
+    </div>
+  </article>
+
+  <!-- ---------------- B ---------------- -->
+  <article class="variant" id="vB">
+    <div class="v-head"><h3>B: switch ile dağıtım, fonksiyon pointer'ı yok</h3><span class="folder">variantB_switch/</span></div>
+    <p class="idea">Fonksiyon pointer'ları tamamen kaldırılıyor. Entegratörün dosyasında, her işlem için ID'ye göre doğrudan çağrı yapan bir <code>switch</code> var.</p>
+
+    <h4>Yapı ve akış</h4>
+<pre><code><span class="c">/* ModuleMgr_Cfg.h (ModuleMgr bildiriyor, entegratör tanımlıyor) */</span>
+MM_Ret_t ModuleMgr_Cfg_Write(VendorId_t id, uint32_t value);
+
+<span class="c">/* Entegratör (ModuleMgr_Cfg.c): vendor'ları bilen tek dosya */</span>
+MM_Ret_t ModuleMgr_Cfg_Write(VendorId_t id, uint32_t value)
+{
+    MM_Ret_t ret;
+    switch (id)
+    {
+        case VENDOR_A_ID: ret = VendorA_Write(value); break;   <span class="c">// doğrudan çağrı</span>
+        case VENDOR_B_ID: ret = VendorB_Write(value); break;
+        default:          ret = MM_ERR_NOT_FOUND;     break;
+    }
+    return ret;
+}
+
+<span class="c">/* ModuleMgr: ortak kontroller (init, NULL) + dağıtıcıya yönlendirme */</span>
+ret = ModuleMgr_Cfg_Write(id, value);</code></pre>
+    <p><strong>Yeni vendor eklemek:</strong> Beş dağıtıcı fonksiyonun hepsine bir <code>case</code>, ID listesine bir satır ve main'e bir Init çağrısı. Gerçek projelerde bu dosya bir konfigüratör aracıyla üretilir.</p>
+
+    <div class="pc">
+      <div class="plus"><h5>Artıları</h5><ul>
+        <li>Fonksiyon pointer'ı yok; call graph tamamen statik ve hiçbir annotation gerekmiyor.</li>
+        <li>Analiz edilmesi en kolay yapı; güvenlik değerlendirmesi en basit hale geliyor.</li>
+        <li>Aynı ID'yi iki kez yazmak derleme hatası veriyor (<code>duplicate case value</code>).</li>
+        <li>Bozulabilecek bir tablo yok. Derleyici çağrıları optimize edebilir (inline).</li>
+      </ul></div>
+      <div class="minus"><h5>Eksileri</h5><ul>
+        <li>Vendor fonksiyonları <code>public</code> olmak zorunda; kapsülleme zayıflıyor.</li>
+        <li>Yeni vendor eklemek 5 ayrı yerde değişiklik demek; elle yapıldığında hataya açık, pratikte kod üretici gerekiyor.</li>
+        <li>ModuleMgr 7 sembole link seviyesinde bağımlı. Bu bağımlılığı kaldırmanın yolu fonksiyonları parametre olarak vermek, bu da yine fonksiyon pointer'ına, yani A'ya dönmek demek.</li>
+        <li>ModuleMgr çok inceliyor; asıl iş entegratörün dosyasına geçiyor.</li>
+      </ul></div>
+    </div>
+
+    <div class="sa">
+      <span class="grade g-best">Statik analiz: en iyi</span>
+      <p>Çağrı zinciri tamamen doğrudan: <code>ModuleMgr_Write → ModuleMgr_Cfg_Write → VendorA_Write</code>. Bir aracın çözmesi gereken hiçbir dolaylı çağrı yok. Bunun bedeli esneklik: "vendor'ları bilen kod" derleme anında bir yerde yazılı olmak zorunda.</p>
+    </div>
+  </article>
+
+  <div class="note"><span class="lbl">Ortak MISRA düzeltmeleri</span><p>A, A2 ve B'de ek olarak şu MISRA C:2012 kurallarına uyuldu: 15.5 (tek çıkış noktası), 16.3 (switch case'leri <code>break</code> ile biter) ve 17.7 (dönüş değerleri kullanılır ya da <code>(void)</code> ile açıkça yok sayılır). Demodaki <code>printf</code> kullanımı Rule 21.6'ya karşı bilinçli bir sapma. Dinamik bellek, <code>void*</code> veya cast hiçbir varyantta yok.</p></div>
+</section>
+
+<!-- ================================================================== -->
+<section class="sec" id="karsilastirma">
+  <h2 class="sec-title"><span class="n">4</span>Karşılaştırma</h2>
+
+  <div class="tbl wide"><table>
+    <thead><tr><th></th><th>variant0</th><th>A</th><th>A2</th><th>B</th></tr></thead>
+    <tbody>
+      <tr><td>Fonksiyon pointer'ı</td><td>Var</td><td>Var</td><td>Var</td><td class="y">Yok</td></tr>
+      <tr><td>Çağrı hedefi derleme anında belli mi</td><td class="n">Hayır</td><td class="y">Evet</td><td class="y">Evet</td><td class="y">Evet</td></tr>
+      <tr><td>ID ile vendor eşleşmesi belli mi</td><td class="n">Hayır</td><td class="y">Evet</td><td class="y">Evet</td><td class="y">Evet</td></tr>
+      <tr><td>Tablo nerede</td><td class="n">RAM</td><td class="y">Flash</td><td class="y">Flash</td><td class="y">Tablo yok</td></tr>
+      <tr><td>Vendor fonksiyonları</td><td class="y">static</td><td class="y">static</td><td class="y">static</td><td class="m">public</td></tr>
+      <tr><td>ModuleMgr'ın link bağımlılığı</td><td class="y">Yok</td><td class="m">2 sembol</td><td class="y">Yok</td><td class="n">7 sembol</td></tr>
+      <tr><td>Vendor kendini kaydeder mi</td><td class="y">Evet</td><td>Hayır</td><td>Hayır</td><td>Hayır</td></tr>
+      <tr><td>Tekrarlanan ID ne zaman yakalanır</td><td class="m">Register'da</td><td class="m">Init'te</td><td class="m">Init'te</td><td class="y">Derlemede</td></tr>
+      <tr><td>Yeni vendor eklemek</td><td>Init çağrısı</td><td>Tabloya 1 satır</td><td>Tabloya 1 satır</td><td class="m">5 switch'e case</td></tr>
+      <tr><td>Unit test kolaylığı</td><td class="y">Kolay</td><td class="m">Sahte sembol gerekir</td><td class="y">Kolay</td><td class="m">Sahte dağıtıcı gerekir</td></tr>
+      <tr><td>Statik analiz</td><td class="n">Zor</td><td class="y">İyi</td><td class="y">İyi</td><td class="y">En iyi</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Bağımlılığın kanıtı</h3>
+  <p>Derlenmiş <code>ModuleMgr.o</code> dosyasında <code>nm -u</code> ile listelenen, yani ModuleMgr'ın dışarıdan beklediği semboller:</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Varyant</th><th>Dışarıdan beklenen semboller</th></tr></thead>
+    <tbody>
+      <tr><td>A</td><td><code>g_moduleMgrCfg</code>, <code>g_moduleMgrCfgSize</code></td></tr>
+      <tr><td>A2</td><td class="y">Hiçbiri</td></tr>
+      <tr><td>B</td><td><code>ModuleMgr_Cfg_Read/Write/Execute/GetStatus/GetName</code>, <code>g_moduleMgrVendorIds</code>, <code>g_moduleMgrVendorCount</code></td></tr>
+    </tbody>
+  </table></div>
+  <p>Hiçbir varyantta ModuleMgr.c bir vendor ya da entegratör header'ını include etmiyor; derleme seviyesinde bağımlılık yok. Fark link seviyesinde. A'da bağımlılık ters çevrilmiş (dependency inversion): sembolün tipini ve adını ModuleMgr belirliyor, entegratör de bu sözleşmeye uyuyor. A2 bu bağımlılığı tamamen kaldırıyor.</p>
+</section>
+
+<!-- ================================================================== -->
+<section class="sec" id="secim">
+  <h2 class="sec-title"><span class="n">5</span>Hangisi ne zaman</h2>
+  <div class="pick">
+    <div><b>A2</b><span><strong>Genel öneri.</strong> Statik analiz önemli, konfigürasyon elle yazılıyor ve ModuleMgr'ın kimseye bağımlı olmaması isteniyor. Tek kural: Init tek bir yerden, bir kez çağrılır.</span></div>
+    <div><b>B</b><span>Güvenlik kritik bir proje (ör. ISO 26262 ASIL C/D) ve bir kod üretici ya da konfigüratör var. En temiz call graph bu yapıda.</span></div>
+    <div><b>A</b><span>A2'ye göre tek avantajı daha az parametre geçişi. Özel bir sebep yoksa A2 tercih edilmeli.</span></div>
+    <div><b>variant0</b><span>Prototip ya da çalışma zamanında eklenen plugin'ler; statik analiz ikincil önemde. Kullanılacaksa en azından tablolar <code>static const</code> yapılmalı (ara çözüm).</span></div>
+  </div>
+  <div class="note warn"><span class="lbl">Tasarım bedeli</span><p>Statik analize tam uygun her varyant, "vendor kendini kaydeder" fikrinden vazgeçiyor; vendor'ları konfigürasyona entegratör yazıyor. Kaydın çalışma zamanında yapılması, zaten analizi zorlaştıran şeyin kendisi.</p></div>
+</section>
+
+<!-- ================================================================== -->
+<section class="sec" id="sozluk">
+  <h2 class="sec-title"><span class="n">6</span>Kavramlar</h2>
+  <dl class="gloss">
+    <dt>Late binding / early binding</dt>
+    <dd>Çağrı hedefinin çalışma zamanında (geç) ya da derleme anında (erken) belirlenmesi. variant0 geç bağlama yapıyor; A, A2 ve B erken bağlama yapıyor.</dd>
+    <dt>Call graph</dt>
+    <dd>Hangi fonksiyonun hangi fonksiyonu çağırdığını gösteren grafik. Stack analizi ve özyineleme kontrolü (MISRA 17.2) buna dayanır.</dd>
+    <dt>Array smashing</dt>
+    <dd>Statik analiz araçlarının bir dizinin bütün elemanlarını tek bir özet halinde birleştirmesi. Hızlı bir yöntem, ama elemanlar arasındaki ilişkiyi (id ile pIfc arasındaki bağı) kaybettirir.</dd>
+    <dt>Dangling pointer</dt>
+    <dd>Ömrü bitmiş bir nesneyi göstermeye devam eden pointer.</dd>
+    <dt><code>const</code>'un konumu</dt>
+    <dd><code>const T *p</code> gösterilen veriyi sabitler; <code>T * const p</code> pointer'ın kendisini sabitler. <code>const</code> makine kodu üretmez, sadece derleyicinin kontrolüdür. Ama veriyi flash'a koyar ve statik analize değerin değişmeyeceğini garanti eder.</dd>
+    <dt>Dependency inversion</dt>
+    <dd>Alt seviyedeki modülün sözleşmeyi kendisinin tanımlaması ve üst seviyedeki tarafın buna uyması (A'daki <code>extern</code> tablo).</dd>
+    <dt>Post-build konfigürasyon</dt>
+    <dd>Konfigürasyonun modüle Init parametresi olarak verilmesi: <code>Xxx_Init(const Xxx_ConfigType *)</code>. A2'deki yöntem.</dd>
+  </dl>
+</section>
+
+<footer>
+  <p>Kod örnekleri repodaki varyantların kısaltılmış halleridir. <a class="top" href="#bas">↑ Başa dön</a></p>
+</footer>
+
+</div>
+
+</body>
+</html>
