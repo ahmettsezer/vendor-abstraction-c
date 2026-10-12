@@ -1,0 +1,11 @@
+# Derleme ciktilari
+build/
+*.exe
+*.o
+*.obj
+
+# VS Code: debug/task ayarlari repoda kalir, kisisel olanlar kalmaz
+.vscode/*
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/c_cpp_properties.json

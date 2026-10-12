@@ -1,0 +1,177 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "mkdir build",
+            "type": "shell",
+            "command": "cmd",
+            "args": [
+                "/c",
+                "if not exist build mkdir build"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "silent"
+            }
+        },
+        {
+            "label": "build variant0 (debug)",
+            "type": "process",
+            "command": "C:/MinGW/bin/gcc.exe",
+            "args": [
+                "-std=c99",
+                "-Wall",
+                "-Wextra",
+                "-Wpedantic",
+                "-O0",
+                "-g3",
+                "-ImoduleMgr",
+                "-Ivendors/vendorA",
+                "-Ivendors/vendorB",
+                "-Iintegrator",
+                "moduleMgr/ModuleMgr.c",
+                "vendors/vendorA/VendorA.c",
+                "vendors/vendorB/VendorB.c",
+                "integrator/Integrator_Cfg.c",
+                "integrator/main.c",
+                "-o",
+                "../build/demo0.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/variant0_runtimeReg"
+            },
+            "dependsOn": "mkdir build",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}/variant0_runtimeReg"
+                ]
+            },
+            "group": "build"
+        },
+        {
+            "label": "build variantA (debug)",
+            "type": "process",
+            "command": "C:/MinGW/bin/gcc.exe",
+            "args": [
+                "-std=c99",
+                "-Wall",
+                "-Wextra",
+                "-Wpedantic",
+                "-O0",
+                "-g3",
+                "-ImoduleMgr",
+                "-Ivendors/vendorA",
+                "-Ivendors/vendorB",
+                "moduleMgr/ModuleMgr.c",
+                "vendors/vendorA/VendorA.c",
+                "vendors/vendorB/VendorB.c",
+                "integrator/ModuleMgr_Cfg.c",
+                "integrator/main.c",
+                "-o",
+                "../build/demoA.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/variantA_constCfg"
+            },
+            "dependsOn": "mkdir build",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}/variantA_constCfg"
+                ]
+            },
+            "group": "build"
+        },
+        {
+            "label": "build variantA2 (debug)",
+            "type": "process",
+            "command": "C:/MinGW/bin/gcc.exe",
+            "args": [
+                "-std=c99",
+                "-Wall",
+                "-Wextra",
+                "-Wpedantic",
+                "-O0",
+                "-g3",
+                "-ImoduleMgr",
+                "-Ivendors/vendorA",
+                "-Ivendors/vendorB",
+                "-Iintegrator",
+                "moduleMgr/ModuleMgr.c",
+                "vendors/vendorA/VendorA.c",
+                "vendors/vendorB/VendorB.c",
+                "integrator/Integrator_Cfg.c",
+                "integrator/main.c",
+                "-o",
+                "../build/demoA2.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/variantA2_cfgParam"
+            },
+            "dependsOn": "mkdir build",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}/variantA2_cfgParam"
+                ]
+            },
+            "group": "build"
+        },
+        {
+            "label": "build variantB (debug)",
+            "type": "process",
+            "command": "C:/MinGW/bin/gcc.exe",
+            "args": [
+                "-std=c99",
+                "-Wall",
+                "-Wextra",
+                "-Wpedantic",
+                "-O0",
+                "-g3",
+                "-ImoduleMgr",
+                "-Ivendors/vendorA",
+                "-Ivendors/vendorB",
+                "moduleMgr/ModuleMgr.c",
+                "vendors/vendorA/VendorA.c",
+                "vendors/vendorB/VendorB.c",
+                "integrator/ModuleMgr_Cfg.c",
+                "integrator/main.c",
+                "-o",
+                "../build/demoB.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/variantB_switch"
+            },
+            "dependsOn": "mkdir build",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}/variantB_switch"
+                ]
+            },
+            "group": "build"
+        },
+        {
+            "label": "build all variants",
+            "dependsOn": [
+                "build variant0 (debug)",
+                "build variantA (debug)",
+                "build variantA2 (debug)",
+                "build variantB (debug)"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
