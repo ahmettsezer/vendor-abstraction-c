@@ -1,6 +1,6 @@
 /**
  * @file    Man.h
- * @brief   [fleetConfig] MAN TGX: TIR arayuzunu implement eden vendor.
+ * @brief   [fleetConfig] MAN TGX: TIR arayuzunu implement eden arac.
  *
  *          Disariya tek bir arayuz tablosu acar: Man_TruckIfc.
  *          Ortak islemler (bilgi, sur, yakit, bakim) ve tira ozel

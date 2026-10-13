@@ -19,16 +19,16 @@
 #include "Man.h"
 #include "Volvo.h"
 
-static const ModuleMgr_VehicleCfg_t s_fleet[] =
+static const FleetMgr_VehicleCfg_t s_fleet[] =
 {
-    /* id                     type                otomobil         tir             */
-    { FLEET_ID_TOYOTA_COROLLA, VEHICLE_TYPE_CAR,   &Toyota_CarIfc,  NULL            },
-    { FLEET_ID_FORD_TOURNEO,   VEHICLE_TYPE_CAR,   &Ford_CarIfc,    NULL            },
-    { FLEET_ID_MAN_TGX,        VEHICLE_TYPE_TRUCK, NULL,            &Man_TruckIfc   },
-    { FLEET_ID_VOLVO_FH,       VEHICLE_TYPE_TRUCK, NULL,            &Volvo_TruckIfc },
+    /* id                        type                otomobil         tir             */
+    { VEHICLE_ID_TOYOTA_COROLLA, VEHICLE_TYPE_CAR,   &Toyota_CarIfc,  NULL            },
+    { VEHICLE_ID_FORD_TOURNEO,   VEHICLE_TYPE_CAR,   &Ford_CarIfc,    NULL            },
+    { VEHICLE_ID_MAN_TGX,        VEHICLE_TYPE_TRUCK, NULL,            &Man_TruckIfc   },
+    { VEHICLE_ID_VOLVO_FH,       VEHICLE_TYPE_TRUCK, NULL,            &Volvo_TruckIfc },
 };
 
-const ModuleMgr_Config_t Integrator_FleetCfg =
+const FleetMgr_Config_t Integrator_FleetCfg =
 {
     .pVehicles    = s_fleet,
     .vehicleCount = (uint8_t)(sizeof(s_fleet) / sizeof(s_fleet[0])),

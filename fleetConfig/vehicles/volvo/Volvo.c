@@ -26,8 +26,8 @@ static uint32_t s_kmSinceService = 0u;
 static uint8_t  s_fuelPct        = 0u;
 static uint32_t s_loadKg         = 0u;
 
-/* ---- Init: entegrator degil ModuleMgr_Init cagirir ---------------------- */
-static MM_Ret_t volvo_init(void)
+/* ---- Init: entegrator degil FleetMgr_Init cagirir ---------------------- */
+static FM_Ret_t volvo_init(void)
 {
     s_odometerKm     = VOLVO_INIT_ODOMETER_KM;
     s_kmSinceService = VOLVO_INIT_SERVICE_KM;
@@ -35,11 +35,11 @@ static MM_Ret_t volvo_init(void)
     s_loadKg         = 0u;
     (void)printf("    [Volvo] " VOLVO_MODEL ": init (%lu km, depo %%%u)\n",
                  (unsigned long)s_odometerKm, (unsigned)s_fuelPct);
-    return MM_OK;
+    return FM_OK;
 }
 
 /* ---- Ortak islemler ----------------------------------------------------- */
-static MM_Ret_t volvo_getInfo(VehicleInfo_t *pInfo)
+static FM_Ret_t volvo_getInfo(VehicleInfo_t *pInfo)
 {
     pInfo->pBrand         = "Volvo";
     pInfo->pModel         = VOLVO_MODEL;
@@ -49,12 +49,12 @@ static MM_Ret_t volvo_getInfo(VehicleInfo_t *pInfo)
     pInfo->kmSinceService = s_kmSinceService;
     pInfo->fuelLevelPct   = s_fuelPct;
     pInfo->status         = (s_loadKg > 0u) ? VEHICLE_STATUS_IN_USE : VEHICLE_STATUS_AVAILABLE;
-    return MM_OK;
+    return FM_OK;
 }
 
-static MM_Ret_t volvo_drive(uint32_t km)
+static FM_Ret_t volvo_drive(uint32_t km)
 {
-    MM_Ret_t ret = MM_OK;
+    FM_Ret_t ret = FM_OK;
     uint32_t pctPer100Km = VOLVO_BASE_PCT_PER_100KM + (s_loadKg / VOLVO_KG_PER_EXTRA_PCT);
     uint32_t needPct     = (km * pctPer100Km) / 100u;
 
@@ -62,7 +62,7 @@ static MM_Ret_t volvo_drive(uint32_t km)
     {
         (void)printf("    [Volvo] " VOLVO_MODEL ": %lu km icin yakit yetersiz (gerekli %%%lu, depoda %%%u)\n",
                      (unsigned long)km, (unsigned long)needPct, (unsigned)s_fuelPct);
-        ret = MM_ERR_LOW_FUEL;
+        ret = FM_ERR_LOW_FUEL;
     }
     else
     {
@@ -75,42 +75,42 @@ static MM_Ret_t volvo_drive(uint32_t km)
     return ret;
 }
 
-static MM_Ret_t volvo_refuel(void)
+static FM_Ret_t volvo_refuel(void)
 {
     s_fuelPct = 100u;
     (void)printf("    [Volvo] " VOLVO_MODEL ": depo dolduruldu\n");
-    return MM_OK;
+    return FM_OK;
 }
 
-static MM_Ret_t volvo_doService(void)
+static FM_Ret_t volvo_doService(void)
 {
     s_kmSinceService = 0u;
     (void)printf("    [Volvo] " VOLVO_MODEL ": bakim yapildi\n");
-    return MM_OK;
+    return FM_OK;
 }
 
 /* ---- Tira ozel islemler ------------------------------------------------- */
-static MM_Ret_t volvo_getMaxLoadKg(uint32_t *pKg)
+static FM_Ret_t volvo_getMaxLoadKg(uint32_t *pKg)
 {
     *pKg = VOLVO_MAX_LOAD_KG;
-    return MM_OK;
+    return FM_OK;
 }
 
-static MM_Ret_t volvo_getLoadKg(uint32_t *pKg)
+static FM_Ret_t volvo_getLoadKg(uint32_t *pKg)
 {
     *pKg = s_loadKg;
-    return MM_OK;
+    return FM_OK;
 }
 
-static MM_Ret_t volvo_loadCargo(uint32_t kg)
+static FM_Ret_t volvo_loadCargo(uint32_t kg)
 {
-    MM_Ret_t ret = MM_OK;
+    FM_Ret_t ret = FM_OK;
 
     if ((s_loadKg + kg) > VOLVO_MAX_LOAD_KG)
     {
         (void)printf("    [Volvo] " VOLVO_MODEL ": +%lu kg yuklenemez (mevcut %lu, kapasite %lu kg)\n",
                      (unsigned long)kg, (unsigned long)s_loadKg, (unsigned long)VOLVO_MAX_LOAD_KG);
-        ret = MM_ERR_OVER_CAPACITY;
+        ret = FM_ERR_OVER_CAPACITY;
     }
     else
     {
@@ -121,11 +121,11 @@ static MM_Ret_t volvo_loadCargo(uint32_t kg)
     return ret;
 }
 
-static MM_Ret_t volvo_unloadCargo(void)
+static FM_Ret_t volvo_unloadCargo(void)
 {
     s_loadKg = 0u;
     (void)printf("    [Volvo] " VOLVO_MODEL ": yuk bosaltildi\n");
-    return MM_OK;
+    return FM_OK;
 }
 
 /* ---- Arayuz tablosu: const, tanimlandigi satirda dolu ------------------- */

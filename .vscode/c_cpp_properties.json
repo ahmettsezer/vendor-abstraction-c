@@ -53,11 +53,11 @@
             "cStandard": "c99",
             "intelliSenseMode": "windows-gcc-x86",
             "includePath": [
-                "${workspaceFolder}/fleetConfig/moduleMgr",
-                "${workspaceFolder}/fleetConfig/vendors/toyota",
-                "${workspaceFolder}/fleetConfig/vendors/ford",
-                "${workspaceFolder}/fleetConfig/vendors/man",
-                "${workspaceFolder}/fleetConfig/vendors/volvo",
+                "${workspaceFolder}/fleetConfig/fleetMgr",
+                "${workspaceFolder}/fleetConfig/vehicles/toyota",
+                "${workspaceFolder}/fleetConfig/vehicles/ford",
+                "${workspaceFolder}/fleetConfig/vehicles/man",
+                "${workspaceFolder}/fleetConfig/vehicles/volvo",
                 "${workspaceFolder}/fleetConfig/integrator"
             ]
         }

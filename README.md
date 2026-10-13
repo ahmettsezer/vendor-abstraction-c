@@ -51,6 +51,8 @@ ModuleMgr'in bir `VendorId` icin hangi fonksiyonu cagiracagini **nereden ogrendi
 ### fleetConfig: gercek hayata yakin ornek
 
 [`fleetConfig`](fleetConfig/), `constConfig` mimarisini bir filo yonetimi uzerinden gosterir.
+Isimler alana gore secilmistir: yonetici `fleetMgr/` (`FleetMgr_*`, donus kodlari `FM_*`),
+araclar `vehicles/` (Toyota, Ford, MAN, Volvo), arac kimlikleri `VEHICLE_ID_*`.
 Iki arac tipi vardir ve her tipin **tek bir arayuzu** vardir. Tum araclarda ortak olan
 islemler her iki arayuzde de ayni isim ve imzayla, dogrudan alan olarak bulunur:
 
@@ -61,15 +63,15 @@ islemler her iki arayuzde de ayni isim ve imzayla, dogrudan alan olarak bulunur:
 
 Entegratorun tablosunda her arac icin `{ id, type, &otomobil, &tir }` yazilir; tipe uymayan
 arayuz `NULL` birakilir. Her vendor tek bir araci temsil eder; bir arayuz tablosu iki
-satirda kullanilamaz. ModuleMgr:
+satirda kullanilamaz. FleetMgr:
 
 - Init'te tip ile arayuz uyumunu, tum fonksiyon pointer'larini, tekrarlanan ID'yi ve ayni
   arayuzun iki kez verilmesini dogrular; ardindan her aracin `init`'ini **kendisi** cagirir.
-  Bir arac init'i hata donerse ModuleMgr init edilmemis kalir (ya hep ya hic).
-- Entegratorun `main`'i markalari tanimaz; sadece `ModuleMgr_Init(&cfg)` cagirir. Markalari
+  Bir arac init'i hata donerse FleetMgr init edilmemis kalir (ya hep ya hic).
+- Entegratorun `main`'i markalari tanimaz; sadece `FleetMgr_Init(&cfg)` cagirir. Markalari
   bilen tek dosya konfigurasyon tablosudur (`Integrator_Cfg.c`).
 - Ortak islemleri tipe gore dogru arayuzden cagirir (`vehicleDrive` gibi yardimcilarla).
-- Tipe uymayan islemi (otomobile yuk) vendor'a gitmeden `MM_ERR_WRONG_TYPE` ile reddeder.
+- Tipe uymayan islemi (otomobile yuk) vendor'a gitmeden `FM_ERR_WRONG_TYPE` ile reddeder.
 - Tipe gore yonetir: bakim araligi tipe gore (otomobil 15.000, tir 30.000 km), yolcuya yeten
   en kucuk otomobili ve yuke yeten en kucuk tiri bulur, tip bazinda filo ozeti cikarir.
 

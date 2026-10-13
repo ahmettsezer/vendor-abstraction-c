@@ -1,6 +1,6 @@
 /**
  * @file    Ford.h
- * @brief   [fleetConfig] Ford Tourneo Custom: OTOMOBIL arayuzunu implement eden vendor.
+ * @brief   [fleetConfig] Ford Tourneo Custom: OTOMOBIL arayuzunu implement eden arac.
  *
  *          Disariya tek bir arayuz tablosu acar: Ford_CarIfc.
  *          Ortak islemler (bilgi, sur, yakit, bakim) ve otomobile ozel

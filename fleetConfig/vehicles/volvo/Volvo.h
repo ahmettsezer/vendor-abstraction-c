@@ -1,6 +1,6 @@
 /**
  * @file    Volvo.h
- * @brief   [fleetConfig] Volvo FH: TIR arayuzunu implement eden vendor.
+ * @brief   [fleetConfig] Volvo FH: TIR arayuzunu implement eden arac.
  *
  *          Disariya tek bir arayuz tablosu acar: Volvo_TruckIfc.
  *          Ortak islemler (bilgi, sur, yakit, bakim) ve tira ozel

@@ -24,8 +24,8 @@ static uint32_t s_kmSinceService = 0u;
 static uint8_t  s_fuelPct        = 0u;
 static uint8_t  s_passengers     = 0u;
 
-/* ---- Init: entegrator degil ModuleMgr_Init cagirir ---------------------- */
-static MM_Ret_t ford_init(void)
+/* ---- Init: entegrator degil FleetMgr_Init cagirir ---------------------- */
+static FM_Ret_t ford_init(void)
 {
     s_odometerKm     = FORD_INIT_ODOMETER_KM;
     s_kmSinceService = FORD_INIT_SERVICE_KM;
@@ -33,11 +33,11 @@ static MM_Ret_t ford_init(void)
     s_passengers     = 0u;
     (void)printf("    [Ford] " FORD_MODEL ": init (%lu km, depo %%%u)\n",
                  (unsigned long)s_odometerKm, (unsigned)s_fuelPct);
-    return MM_OK;
+    return FM_OK;
 }
 
 /* ---- Ortak islemler ----------------------------------------------------- */
-static MM_Ret_t ford_getInfo(VehicleInfo_t *pInfo)
+static FM_Ret_t ford_getInfo(VehicleInfo_t *pInfo)
 {
     pInfo->pBrand         = "Ford";
     pInfo->pModel         = FORD_MODEL;
@@ -47,19 +47,19 @@ static MM_Ret_t ford_getInfo(VehicleInfo_t *pInfo)
     pInfo->kmSinceService = s_kmSinceService;
     pInfo->fuelLevelPct   = s_fuelPct;
     pInfo->status         = (s_passengers > 0u) ? VEHICLE_STATUS_IN_USE : VEHICLE_STATUS_AVAILABLE;
-    return MM_OK;
+    return FM_OK;
 }
 
-static MM_Ret_t ford_drive(uint32_t km)
+static FM_Ret_t ford_drive(uint32_t km)
 {
-    MM_Ret_t ret = MM_OK;
+    FM_Ret_t ret = FM_OK;
     uint32_t needPct = (km * FORD_PCT_PER_100KM) / 100u;
 
     if (needPct > (uint32_t)s_fuelPct)
     {
         (void)printf("    [Ford] " FORD_MODEL ": %lu km icin yakit yetersiz (gerekli %%%lu, depoda %%%u)\n",
                      (unsigned long)km, (unsigned long)needPct, (unsigned)s_fuelPct);
-        ret = MM_ERR_LOW_FUEL;
+        ret = FM_ERR_LOW_FUEL;
     }
     else
     {
@@ -72,36 +72,36 @@ static MM_Ret_t ford_drive(uint32_t km)
     return ret;
 }
 
-static MM_Ret_t ford_refuel(void)
+static FM_Ret_t ford_refuel(void)
 {
     s_fuelPct = 100u;
     (void)printf("    [Ford] " FORD_MODEL ": depo dolduruldu\n");
-    return MM_OK;
+    return FM_OK;
 }
 
-static MM_Ret_t ford_doService(void)
+static FM_Ret_t ford_doService(void)
 {
     s_kmSinceService = 0u;
     (void)printf("    [Ford] " FORD_MODEL ": bakim yapildi\n");
-    return MM_OK;
+    return FM_OK;
 }
 
 /* ---- Otomobile ozel islemler -------------------------------------------- */
-static MM_Ret_t ford_getSeatCount(uint8_t *pSeats)
+static FM_Ret_t ford_getSeatCount(uint8_t *pSeats)
 {
     *pSeats = FORD_SEATS;
-    return MM_OK;
+    return FM_OK;
 }
 
-static MM_Ret_t ford_setPassengers(uint8_t count)
+static FM_Ret_t ford_setPassengers(uint8_t count)
 {
-    MM_Ret_t ret = MM_OK;
+    FM_Ret_t ret = FM_OK;
 
     if (count > FORD_SEATS)
     {
         (void)printf("    [Ford] " FORD_MODEL ": %u yolcu sigmaz (koltuk %u)\n",
                      (unsigned)count, (unsigned)FORD_SEATS);
-        ret = MM_ERR_OVER_CAPACITY;
+        ret = FM_ERR_OVER_CAPACITY;
     }
     else
     {

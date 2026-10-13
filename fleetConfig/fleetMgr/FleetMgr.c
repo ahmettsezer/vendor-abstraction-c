@@ -1,91 +1,91 @@
 /**
- * @file    ModuleMgr.c
+ * @file    FleetMgr.c
  * @brief   [fleetConfig] Filo yoneticisi implementasyonu.
  *
- *          - Hicbir vendor (marka) header'i include edilmez.
- *          - Araclarin init'ini entegrator degil ModuleMgr_Init cagirir.
+ *          - Hicbir arac (marka) header'i include edilmez.
+ *          - Araclarin init'ini entegrator degil FleetMgr_Init cagirir.
  *          - Konfigurasyon Init'te BIR KEZ atanan tek bir const pointer'da
  *            tutulur; gosterdigi tablo entegratorde 'const' ve flash'ta.
  *          - Her aracin tek bir arayuzu vardir (tipine gore CarIfc_t veya
  *            TruckIfc_t). Ortak islemler (bilgi, sur, yakit, bakim) iki
- *            arayuzde de ayni isimle bulunur; ModuleMgr bunlari tipe gore
+ *            arayuzde de ayni isimle bulunur; FleetMgr bunlari tipe gore
  *            dogru arayuzden cagiran yardimcilarla (vehicleXxx) kullanir.
  *          - Tipe ozel islemlerde once arac tipi kontrol edilir; tip
- *            uymuyorsa vendor'a hic gidilmez (MM_ERR_WRONG_TYPE).
+ *            uymuyorsa araca hic gidilmez (FM_ERR_WRONG_TYPE).
  *          - MISRA: tek cikis noktasi (15.5), switch'te break (16.3),
  *            && / || sag tarafinda yan etkili cagri yok (13.5).
  */
 #include <stddef.h>
-#include "ModuleMgr.h"
+#include "FleetMgr.h"
 
 /* NULL = init edilmemis. */
-static const ModuleMgr_Config_t *s_pCfg = NULL;
+static const FleetMgr_Config_t *s_pCfg = NULL;
 
 /* ======================================================================== */
 /*  Ortak islemler: tipe gore dogru arayuzden cagri                         */
 /* ======================================================================== */
 
-static MM_Ret_t vehicleInit(const ModuleMgr_VehicleCfg_t *pV)
+static FM_Ret_t vehicleInit(const FleetMgr_VehicleCfg_t *pV)
 {
-    MM_Ret_t ret;
+    FM_Ret_t ret;
 
     switch (pV->type)
     {
         case VEHICLE_TYPE_CAR:   ret = pV->pCar->init();   break;
         case VEHICLE_TYPE_TRUCK: ret = pV->pTruck->init(); break;
-        default:                 ret = MM_ERR_CONFIG;      break;
+        default:                 ret = FM_ERR_CONFIG;      break;
     }
     return ret;
 }
 
-static MM_Ret_t vehicleGetInfo(const ModuleMgr_VehicleCfg_t *pV, VehicleInfo_t *pInfo)
+static FM_Ret_t vehicleGetInfo(const FleetMgr_VehicleCfg_t *pV, VehicleInfo_t *pInfo)
 {
-    MM_Ret_t ret;
+    FM_Ret_t ret;
 
     switch (pV->type)
     {
         case VEHICLE_TYPE_CAR:   ret = pV->pCar->getInfo(pInfo);   break;
         case VEHICLE_TYPE_TRUCK: ret = pV->pTruck->getInfo(pInfo); break;
-        default:                 ret = MM_ERR_CONFIG;              break;
+        default:                 ret = FM_ERR_CONFIG;              break;
     }
     return ret;
 }
 
-static MM_Ret_t vehicleDrive(const ModuleMgr_VehicleCfg_t *pV, uint32_t km)
+static FM_Ret_t vehicleDrive(const FleetMgr_VehicleCfg_t *pV, uint32_t km)
 {
-    MM_Ret_t ret;
+    FM_Ret_t ret;
 
     switch (pV->type)
     {
         case VEHICLE_TYPE_CAR:   ret = pV->pCar->drive(km);   break;
         case VEHICLE_TYPE_TRUCK: ret = pV->pTruck->drive(km); break;
-        default:                 ret = MM_ERR_CONFIG;         break;
+        default:                 ret = FM_ERR_CONFIG;         break;
     }
     return ret;
 }
 
-static MM_Ret_t vehicleRefuel(const ModuleMgr_VehicleCfg_t *pV)
+static FM_Ret_t vehicleRefuel(const FleetMgr_VehicleCfg_t *pV)
 {
-    MM_Ret_t ret;
+    FM_Ret_t ret;
 
     switch (pV->type)
     {
         case VEHICLE_TYPE_CAR:   ret = pV->pCar->refuel();   break;
         case VEHICLE_TYPE_TRUCK: ret = pV->pTruck->refuel(); break;
-        default:                 ret = MM_ERR_CONFIG;        break;
+        default:                 ret = FM_ERR_CONFIG;        break;
     }
     return ret;
 }
 
-static MM_Ret_t vehicleService(const ModuleMgr_VehicleCfg_t *pV)
+static FM_Ret_t vehicleService(const FleetMgr_VehicleCfg_t *pV)
 {
-    MM_Ret_t ret;
+    FM_Ret_t ret;
 
     switch (pV->type)
     {
         case VEHICLE_TYPE_CAR:   ret = pV->pCar->doService();   break;
         case VEHICLE_TYPE_TRUCK: ret = pV->pTruck->doService(); break;
-        default:                 ret = MM_ERR_CONFIG;           break;
+        default:                 ret = FM_ERR_CONFIG;           break;
     }
     return ret;
 }
@@ -112,7 +112,7 @@ static bool isTruckIfcValid(const TruckIfc_t *pIfc)
 }
 
 /* Tip ile arayuz pointer'lari uyumlu mu? */
-static bool isTypeIfcValid(const ModuleMgr_VehicleCfg_t *pV)
+static bool isTypeIfcValid(const FleetMgr_VehicleCfg_t *pV)
 {
     bool ok;
 
@@ -134,7 +134,7 @@ static bool isTypeIfcValid(const ModuleMgr_VehicleCfg_t *pV)
 }
 
 /* Iki satir ayni araci mi gosteriyor? (ayni ID veya ayni arayuz tablosu) */
-static bool isDuplicate(const ModuleMgr_VehicleCfg_t *pA, const ModuleMgr_VehicleCfg_t *pB)
+static bool isDuplicate(const FleetMgr_VehicleCfg_t *pA, const FleetMgr_VehicleCfg_t *pB)
 {
     bool sameIfc = ((pA->pCar   != NULL) && (pA->pCar   == pB->pCar)) ||
                    ((pA->pTruck != NULL) && (pA->pTruck == pB->pTruck));
@@ -142,39 +142,39 @@ static bool isDuplicate(const ModuleMgr_VehicleCfg_t *pA, const ModuleMgr_Vehicl
     return (pA->id == pB->id) || sameIfc;
 }
 
-static MM_Ret_t validateVehicle(const ModuleMgr_Config_t *pCfg, uint8_t index)
+static FM_Ret_t validateVehicle(const FleetMgr_Config_t *pCfg, uint8_t index)
 {
-    MM_Ret_t ret = MM_OK;
-    const ModuleMgr_VehicleCfg_t *pV = &pCfg->pVehicles[index];
+    FM_Ret_t ret = FM_OK;
+    const FleetMgr_VehicleCfg_t *pV = &pCfg->pVehicles[index];
 
     if ((pV->id == VEHICLE_ID_INVALID) || !isTypeIfcValid(pV))
     {
-        ret = MM_ERR_CONFIG;
+        ret = FM_ERR_CONFIG;
     }
     else
     {
-        for (uint8_t j = (uint8_t)(index + 1u); (ret == MM_OK) && (j < pCfg->vehicleCount); j++)
+        for (uint8_t j = (uint8_t)(index + 1u); (ret == FM_OK) && (j < pCfg->vehicleCount); j++)
         {
             if (isDuplicate(pV, &pCfg->pVehicles[j]))
             {
-                ret = MM_ERR_CONFIG;
+                ret = FM_ERR_CONFIG;
             }
         }
     }
     return ret;
 }
 
-static MM_Ret_t validateCfg(const ModuleMgr_Config_t *pCfg)
+static FM_Ret_t validateCfg(const FleetMgr_Config_t *pCfg)
 {
-    MM_Ret_t ret = MM_OK;
+    FM_Ret_t ret = FM_OK;
 
     if ((pCfg == NULL) || (pCfg->pVehicles == NULL))
     {
-        ret = MM_ERR_PARAM;
+        ret = FM_ERR_PARAM;
     }
     else
     {
-        for (uint8_t i = 0u; (ret == MM_OK) && (i < pCfg->vehicleCount); i++)
+        for (uint8_t i = 0u; (ret == FM_OK) && (i < pCfg->vehicleCount); i++)
         {
             ret = validateVehicle(pCfg, i);
         }
@@ -187,9 +187,9 @@ static MM_Ret_t validateCfg(const ModuleMgr_Config_t *pCfg)
 /* ======================================================================== */
 
 /* id'yi konfigurasyonda arar; bulamazsa NULL. s_pCfg != NULL varsayar. */
-static const ModuleMgr_VehicleCfg_t *findVehicle(VehicleId_t id)
+static const FleetMgr_VehicleCfg_t *findVehicle(VehicleId_t id)
 {
-    const ModuleMgr_VehicleCfg_t *pFound = NULL;
+    const FleetMgr_VehicleCfg_t *pFound = NULL;
 
     for (uint8_t i = 0u; (i < s_pCfg->vehicleCount) && (pFound == NULL); i++)
     {
@@ -202,34 +202,34 @@ static const ModuleMgr_VehicleCfg_t *findVehicle(VehicleId_t id)
 }
 
 /* Ortak on kontrol: init + id. */
-static MM_Ret_t getVehicle(VehicleId_t id, const ModuleMgr_VehicleCfg_t **ppV)
+static FM_Ret_t getVehicle(VehicleId_t id, const FleetMgr_VehicleCfg_t **ppV)
 {
-    MM_Ret_t ret = MM_OK;
+    FM_Ret_t ret = FM_OK;
 
     if (s_pCfg == NULL)
     {
-        ret = MM_ERR_NOT_INIT;
+        ret = FM_ERR_NOT_INIT;
     }
     else
     {
         *ppV = findVehicle(id);
         if (*ppV == NULL)
         {
-            ret = MM_ERR_NOT_FOUND;
+            ret = FM_ERR_NOT_FOUND;
         }
     }
     return ret;
 }
 
 /* Tipe ozel islemler icin: init + id + TIP kontrolu. */
-static MM_Ret_t getVehicleOfType(VehicleId_t id, VehicleType_t type,
-                                 const ModuleMgr_VehicleCfg_t **ppV)
+static FM_Ret_t getVehicleOfType(VehicleId_t id, VehicleType_t type,
+                                 const FleetMgr_VehicleCfg_t **ppV)
 {
-    MM_Ret_t ret = getVehicle(id, ppV);
+    FM_Ret_t ret = getVehicle(id, ppV);
 
-    if ((ret == MM_OK) && ((*ppV)->type != type))
+    if ((ret == FM_OK) && ((*ppV)->type != type))
     {
-        ret = MM_ERR_WRONG_TYPE;
+        ret = FM_ERR_WRONG_TYPE;
     }
     return ret;
 }
@@ -240,22 +240,22 @@ static MM_Ret_t getVehicleOfType(VehicleId_t id, VehicleType_t type,
 
 /* 1) Konfigurasyonu dogrular.
  * 2) Konfigurasyondaki her aracin init'ini cagirir (entegrator cagirmaz).
- * Herhangi bir adim basarisizsa ModuleMgr init edilmemis kalir ve hata
+ * Herhangi bir adim basarisizsa FleetMgr init edilmemis kalir ve hata
  * doner: yarim bir filoyla calismaya baslanmaz (ya hep ya hic). */
-MM_Ret_t ModuleMgr_Init(const ModuleMgr_Config_t *pCfg)
+FM_Ret_t FleetMgr_Init(const FleetMgr_Config_t *pCfg)
 {
-    MM_Ret_t ret = validateCfg(pCfg);
+    FM_Ret_t ret = validateCfg(pCfg);
 
     s_pCfg = NULL;
 
-    if (ret == MM_OK)   /* pCfg burada gecerli */
+    if (ret == FM_OK)   /* pCfg burada gecerli */
     {
-        for (uint8_t i = 0u; (ret == MM_OK) && (i < pCfg->vehicleCount); i++)
+        for (uint8_t i = 0u; (ret == FM_OK) && (i < pCfg->vehicleCount); i++)
         {
             ret = vehicleInit(&pCfg->pVehicles[i]);
         }
 
-        if (ret == MM_OK)
+        if (ret == FM_OK)
         {
             s_pCfg = pCfg;
         }
@@ -263,18 +263,18 @@ MM_Ret_t ModuleMgr_Init(const ModuleMgr_Config_t *pCfg)
     return ret;
 }
 
-MM_Ret_t ModuleMgr_DeInit(void)
+FM_Ret_t FleetMgr_DeInit(void)
 {
     s_pCfg = NULL;
-    return MM_OK;
+    return FM_OK;
 }
 
-uint8_t ModuleMgr_GetVehicleCount(void)
+uint8_t FleetMgr_GetVehicleCount(void)
 {
     return (s_pCfg != NULL) ? s_pCfg->vehicleCount : 0u;
 }
 
-VehicleId_t ModuleMgr_GetVehicleIdAt(uint8_t index)
+VehicleId_t FleetMgr_GetVehicleIdAt(uint8_t index)
 {
     VehicleId_t id = VEHICLE_ID_INVALID;
 
@@ -285,16 +285,16 @@ VehicleId_t ModuleMgr_GetVehicleIdAt(uint8_t index)
     return id;
 }
 
-MM_Ret_t ModuleMgr_GetVehicleType(VehicleId_t id, VehicleType_t *pType)
+FM_Ret_t FleetMgr_GetVehicleType(VehicleId_t id, VehicleType_t *pType)
 {
-    const ModuleMgr_VehicleCfg_t *pV = NULL;
-    MM_Ret_t ret = getVehicle(id, &pV);
+    const FleetMgr_VehicleCfg_t *pV = NULL;
+    FM_Ret_t ret = getVehicle(id, &pV);
 
-    if (ret == MM_OK)
+    if (ret == FM_OK)
     {
         if (pType == NULL)
         {
-            ret = MM_ERR_PARAM;
+            ret = FM_ERR_PARAM;
         }
         else
         {
@@ -308,16 +308,16 @@ MM_Ret_t ModuleMgr_GetVehicleType(VehicleId_t id, VehicleType_t *pType)
 /*  Ortak islemler: her iki tipte de gecerli                                */
 /* ======================================================================== */
 
-MM_Ret_t ModuleMgr_GetInfo(VehicleId_t id, VehicleInfo_t *pInfo)
+FM_Ret_t FleetMgr_GetInfo(VehicleId_t id, VehicleInfo_t *pInfo)
 {
-    const ModuleMgr_VehicleCfg_t *pV = NULL;
-    MM_Ret_t ret = getVehicle(id, &pV);
+    const FleetMgr_VehicleCfg_t *pV = NULL;
+    FM_Ret_t ret = getVehicle(id, &pV);
 
-    if (ret == MM_OK)
+    if (ret == FM_OK)
     {
         if (pInfo == NULL)
         {
-            ret = MM_ERR_PARAM;
+            ret = FM_ERR_PARAM;
         }
         else
         {
@@ -327,36 +327,36 @@ MM_Ret_t ModuleMgr_GetInfo(VehicleId_t id, VehicleInfo_t *pInfo)
     return ret;
 }
 
-MM_Ret_t ModuleMgr_Drive(VehicleId_t id, uint32_t km)
+FM_Ret_t FleetMgr_Drive(VehicleId_t id, uint32_t km)
 {
-    const ModuleMgr_VehicleCfg_t *pV = NULL;
-    MM_Ret_t ret = getVehicle(id, &pV);
+    const FleetMgr_VehicleCfg_t *pV = NULL;
+    FM_Ret_t ret = getVehicle(id, &pV);
 
-    if (ret == MM_OK)
+    if (ret == FM_OK)
     {
         ret = vehicleDrive(pV, km);
     }
     return ret;
 }
 
-MM_Ret_t ModuleMgr_Refuel(VehicleId_t id)
+FM_Ret_t FleetMgr_Refuel(VehicleId_t id)
 {
-    const ModuleMgr_VehicleCfg_t *pV = NULL;
-    MM_Ret_t ret = getVehicle(id, &pV);
+    const FleetMgr_VehicleCfg_t *pV = NULL;
+    FM_Ret_t ret = getVehicle(id, &pV);
 
-    if (ret == MM_OK)
+    if (ret == FM_OK)
     {
         ret = vehicleRefuel(pV);
     }
     return ret;
 }
 
-MM_Ret_t ModuleMgr_Service(VehicleId_t id)
+FM_Ret_t FleetMgr_Service(VehicleId_t id)
 {
-    const ModuleMgr_VehicleCfg_t *pV = NULL;
-    MM_Ret_t ret = getVehicle(id, &pV);
+    const FleetMgr_VehicleCfg_t *pV = NULL;
+    FM_Ret_t ret = getVehicle(id, &pV);
 
-    if (ret == MM_OK)
+    if (ret == FM_OK)
     {
         ret = vehicleService(pV);
     }
@@ -367,16 +367,16 @@ MM_Ret_t ModuleMgr_Service(VehicleId_t id)
 /*  Otomobil arayuzu                                                        */
 /* ======================================================================== */
 
-MM_Ret_t ModuleMgr_Car_GetSeatCount(VehicleId_t id, uint8_t *pSeats)
+FM_Ret_t FleetMgr_Car_GetSeatCount(VehicleId_t id, uint8_t *pSeats)
 {
-    const ModuleMgr_VehicleCfg_t *pV = NULL;
-    MM_Ret_t ret = getVehicleOfType(id, VEHICLE_TYPE_CAR, &pV);
+    const FleetMgr_VehicleCfg_t *pV = NULL;
+    FM_Ret_t ret = getVehicleOfType(id, VEHICLE_TYPE_CAR, &pV);
 
-    if (ret == MM_OK)
+    if (ret == FM_OK)
     {
         if (pSeats == NULL)
         {
-            ret = MM_ERR_PARAM;
+            ret = FM_ERR_PARAM;
         }
         else
         {
@@ -386,12 +386,12 @@ MM_Ret_t ModuleMgr_Car_GetSeatCount(VehicleId_t id, uint8_t *pSeats)
     return ret;
 }
 
-MM_Ret_t ModuleMgr_Car_SetPassengers(VehicleId_t id, uint8_t count)
+FM_Ret_t FleetMgr_Car_SetPassengers(VehicleId_t id, uint8_t count)
 {
-    const ModuleMgr_VehicleCfg_t *pV = NULL;
-    MM_Ret_t ret = getVehicleOfType(id, VEHICLE_TYPE_CAR, &pV);
+    const FleetMgr_VehicleCfg_t *pV = NULL;
+    FM_Ret_t ret = getVehicleOfType(id, VEHICLE_TYPE_CAR, &pV);
 
-    if (ret == MM_OK)
+    if (ret == FM_OK)
     {
         ret = pV->pCar->setPassengers(count);
     }
@@ -402,16 +402,16 @@ MM_Ret_t ModuleMgr_Car_SetPassengers(VehicleId_t id, uint8_t count)
 /*  Tir arayuzu                                                             */
 /* ======================================================================== */
 
-MM_Ret_t ModuleMgr_Truck_GetMaxLoad(VehicleId_t id, uint32_t *pKg)
+FM_Ret_t FleetMgr_Truck_GetMaxLoad(VehicleId_t id, uint32_t *pKg)
 {
-    const ModuleMgr_VehicleCfg_t *pV = NULL;
-    MM_Ret_t ret = getVehicleOfType(id, VEHICLE_TYPE_TRUCK, &pV);
+    const FleetMgr_VehicleCfg_t *pV = NULL;
+    FM_Ret_t ret = getVehicleOfType(id, VEHICLE_TYPE_TRUCK, &pV);
 
-    if (ret == MM_OK)
+    if (ret == FM_OK)
     {
         if (pKg == NULL)
         {
-            ret = MM_ERR_PARAM;
+            ret = FM_ERR_PARAM;
         }
         else
         {
@@ -421,16 +421,16 @@ MM_Ret_t ModuleMgr_Truck_GetMaxLoad(VehicleId_t id, uint32_t *pKg)
     return ret;
 }
 
-MM_Ret_t ModuleMgr_Truck_GetLoad(VehicleId_t id, uint32_t *pKg)
+FM_Ret_t FleetMgr_Truck_GetLoad(VehicleId_t id, uint32_t *pKg)
 {
-    const ModuleMgr_VehicleCfg_t *pV = NULL;
-    MM_Ret_t ret = getVehicleOfType(id, VEHICLE_TYPE_TRUCK, &pV);
+    const FleetMgr_VehicleCfg_t *pV = NULL;
+    FM_Ret_t ret = getVehicleOfType(id, VEHICLE_TYPE_TRUCK, &pV);
 
-    if (ret == MM_OK)
+    if (ret == FM_OK)
     {
         if (pKg == NULL)
         {
-            ret = MM_ERR_PARAM;
+            ret = FM_ERR_PARAM;
         }
         else
         {
@@ -440,24 +440,24 @@ MM_Ret_t ModuleMgr_Truck_GetLoad(VehicleId_t id, uint32_t *pKg)
     return ret;
 }
 
-MM_Ret_t ModuleMgr_Truck_LoadCargo(VehicleId_t id, uint32_t kg)
+FM_Ret_t FleetMgr_Truck_LoadCargo(VehicleId_t id, uint32_t kg)
 {
-    const ModuleMgr_VehicleCfg_t *pV = NULL;
-    MM_Ret_t ret = getVehicleOfType(id, VEHICLE_TYPE_TRUCK, &pV);
+    const FleetMgr_VehicleCfg_t *pV = NULL;
+    FM_Ret_t ret = getVehicleOfType(id, VEHICLE_TYPE_TRUCK, &pV);
 
-    if (ret == MM_OK)
+    if (ret == FM_OK)
     {
         ret = pV->pTruck->loadCargo(kg);
     }
     return ret;
 }
 
-MM_Ret_t ModuleMgr_Truck_UnloadCargo(VehicleId_t id)
+FM_Ret_t FleetMgr_Truck_UnloadCargo(VehicleId_t id)
 {
-    const ModuleMgr_VehicleCfg_t *pV = NULL;
-    MM_Ret_t ret = getVehicleOfType(id, VEHICLE_TYPE_TRUCK, &pV);
+    const FleetMgr_VehicleCfg_t *pV = NULL;
+    FM_Ret_t ret = getVehicleOfType(id, VEHICLE_TYPE_TRUCK, &pV);
 
-    if (ret == MM_OK)
+    if (ret == FM_OK)
     {
         ret = pV->pTruck->unloadCargo();
     }
@@ -468,48 +468,48 @@ MM_Ret_t ModuleMgr_Truck_UnloadCargo(VehicleId_t id)
 /*  Filo seviyesi: tipe gore yonetim                                        */
 /* ======================================================================== */
 
-MM_Ret_t ModuleMgr_GetFleetSummary(ModuleMgr_FleetSummary_t *pSummary)
+FM_Ret_t FleetMgr_GetFleetSummary(FleetMgr_Summary_t *pSummary)
 {
-    MM_Ret_t ret = MM_OK;
+    FM_Ret_t ret = FM_OK;
 
     if (s_pCfg == NULL)
     {
-        ret = MM_ERR_NOT_INIT;
+        ret = FM_ERR_NOT_INIT;
     }
     else if (pSummary == NULL)
     {
-        ret = MM_ERR_PARAM;
+        ret = FM_ERR_PARAM;
     }
     else
     {
-        *pSummary = (ModuleMgr_FleetSummary_t){ { 0u }, 0u, 0u, 0u };
+        *pSummary = (FleetMgr_Summary_t){ { 0u }, 0u, 0u, 0u };
 
         for (uint8_t i = 0u; i < s_pCfg->vehicleCount; i++)
         {
-            const ModuleMgr_VehicleCfg_t *pV = &s_pCfg->pVehicles[i];
+            const FleetMgr_VehicleCfg_t *pV = &s_pCfg->pVehicles[i];
             VehicleInfo_t info;
             uint8_t  seats = 0u;
             uint32_t maxKg = 0u;
 
             pSummary->vehicleCount[pV->type]++;   /* type, Init'te dogrulandi */
 
-            if (vehicleGetInfo(pV, &info) == MM_OK)
+            if (vehicleGetInfo(pV, &info) == FM_OK)
             {
                 pSummary->totalOdometerKm += info.odometerKm;
             }
 
-            /* Tipe ozel bilgi: ModuleMgr tipe gore dogru arayuzu secer. */
+            /* Tipe ozel bilgi: FleetMgr tipe gore dogru arayuzu secer. */
             switch (pV->type)
             {
                 case VEHICLE_TYPE_CAR:
-                    if (pV->pCar->getSeatCount(&seats) == MM_OK)
+                    if (pV->pCar->getSeatCount(&seats) == FM_OK)
                     {
                         pSummary->totalSeats += seats;
                     }
                     break;
 
                 case VEHICLE_TYPE_TRUCK:
-                    if (pV->pTruck->getMaxLoadKg(&maxKg) == MM_OK)
+                    if (pV->pTruck->getMaxLoadKg(&maxKg) == FM_OK)
                     {
                         pSummary->totalMaxLoadKg += maxKg;
                     }
@@ -524,29 +524,29 @@ MM_Ret_t ModuleMgr_GetFleetSummary(ModuleMgr_FleetSummary_t *pSummary)
 }
 
 /* Arac bos mu? */
-static bool isAvailable(const ModuleMgr_VehicleCfg_t *pV)
+static bool isAvailable(const FleetMgr_VehicleCfg_t *pV)
 {
     VehicleInfo_t info;
     bool available = false;
 
-    if (vehicleGetInfo(pV, &info) == MM_OK)
+    if (vehicleGetInfo(pV, &info) == FM_OK)
     {
         available = (info.status == VEHICLE_STATUS_AVAILABLE);
     }
     return available;
 }
 
-MM_Ret_t ModuleMgr_FindCarForPassengers(uint8_t passengers, VehicleId_t *pId)
+FM_Ret_t FleetMgr_FindCarForPassengers(uint8_t passengers, VehicleId_t *pId)
 {
-    MM_Ret_t ret = MM_ERR_NOT_FOUND;
+    FM_Ret_t ret = FM_ERR_NOT_FOUND;
 
     if (s_pCfg == NULL)
     {
-        ret = MM_ERR_NOT_INIT;
+        ret = FM_ERR_NOT_INIT;
     }
     else if (pId == NULL)
     {
-        ret = MM_ERR_PARAM;
+        ret = FM_ERR_PARAM;
     }
     else
     {
@@ -554,19 +554,19 @@ MM_Ret_t ModuleMgr_FindCarForPassengers(uint8_t passengers, VehicleId_t *pId)
 
         for (uint8_t i = 0u; i < s_pCfg->vehicleCount; i++)
         {
-            const ModuleMgr_VehicleCfg_t *pV = &s_pCfg->pVehicles[i];
+            const FleetMgr_VehicleCfg_t *pV = &s_pCfg->pVehicles[i];
             uint8_t seats = 0u;
 
             if ((pV->type == VEHICLE_TYPE_CAR) && isAvailable(pV))
             {
-                if (pV->pCar->getSeatCount(&seats) == MM_OK)
+                if (pV->pCar->getSeatCount(&seats) == FM_OK)
                 {
                     /* yeten en kucuk arac: buyuk araclar buyuk gorevlere kalsin */
                     if ((seats >= passengers) && (seats < bestSeats))
                     {
                         bestSeats = seats;
                         *pId      = pV->id;
-                        ret       = MM_OK;
+                        ret       = FM_OK;
                     }
                 }
             }
@@ -575,17 +575,17 @@ MM_Ret_t ModuleMgr_FindCarForPassengers(uint8_t passengers, VehicleId_t *pId)
     return ret;
 }
 
-MM_Ret_t ModuleMgr_FindTruckForLoad(uint32_t kg, VehicleId_t *pId)
+FM_Ret_t FleetMgr_FindTruckForLoad(uint32_t kg, VehicleId_t *pId)
 {
-    MM_Ret_t ret = MM_ERR_NOT_FOUND;
+    FM_Ret_t ret = FM_ERR_NOT_FOUND;
 
     if (s_pCfg == NULL)
     {
-        ret = MM_ERR_NOT_INIT;
+        ret = FM_ERR_NOT_INIT;
     }
     else if (pId == NULL)
     {
-        ret = MM_ERR_PARAM;
+        ret = FM_ERR_PARAM;
     }
     else
     {
@@ -593,18 +593,18 @@ MM_Ret_t ModuleMgr_FindTruckForLoad(uint32_t kg, VehicleId_t *pId)
 
         for (uint8_t i = 0u; i < s_pCfg->vehicleCount; i++)
         {
-            const ModuleMgr_VehicleCfg_t *pV = &s_pCfg->pVehicles[i];
+            const FleetMgr_VehicleCfg_t *pV = &s_pCfg->pVehicles[i];
             uint32_t maxKg = 0u;
 
             if ((pV->type == VEHICLE_TYPE_TRUCK) && isAvailable(pV))
             {
-                if (pV->pTruck->getMaxLoadKg(&maxKg) == MM_OK)
+                if (pV->pTruck->getMaxLoadKg(&maxKg) == FM_OK)
                 {
                     if ((maxKg >= kg) && (maxKg < bestKg))
                     {
                         bestKg = maxKg;
                         *pId   = pV->id;
-                        ret    = MM_OK;
+                        ret    = FM_OK;
                     }
                 }
             }
@@ -613,22 +613,22 @@ MM_Ret_t ModuleMgr_FindTruckForLoad(uint32_t kg, VehicleId_t *pId)
     return ret;
 }
 
-MM_Ret_t ModuleMgr_IsServiceDue(VehicleId_t id, bool *pDue)
+FM_Ret_t FleetMgr_IsServiceDue(VehicleId_t id, bool *pDue)
 {
-    const ModuleMgr_VehicleCfg_t *pV = NULL;
+    const FleetMgr_VehicleCfg_t *pV = NULL;
     VehicleInfo_t info;
-    MM_Ret_t ret = getVehicle(id, &pV);
+    FM_Ret_t ret = getVehicle(id, &pV);
 
-    if (ret == MM_OK)
+    if (ret == FM_OK)
     {
         if (pDue == NULL)
         {
-            ret = MM_ERR_PARAM;
+            ret = FM_ERR_PARAM;
         }
         else
         {
             ret = vehicleGetInfo(pV, &info);
-            if (ret == MM_OK)
+            if (ret == FM_OK)
             {
                 /* Bakim araligi aracin TIPINE gore konfigurasyondan gelir. */
                 *pDue = (info.kmSinceService >= s_pCfg->serviceIntervalKm[pV->type]);
@@ -638,20 +638,20 @@ MM_Ret_t ModuleMgr_IsServiceDue(VehicleId_t id, bool *pDue)
     return ret;
 }
 
-MM_Ret_t ModuleMgr_RefuelAll(uint8_t *pFailCount)
+FM_Ret_t FleetMgr_RefuelAll(uint8_t *pFailCount)
 {
-    MM_Ret_t ret = MM_OK;
+    FM_Ret_t ret = FM_OK;
     uint8_t fails = 0u;
 
     if (s_pCfg == NULL)
     {
-        ret = MM_ERR_NOT_INIT;
+        ret = FM_ERR_NOT_INIT;
     }
     else
     {
         for (uint8_t i = 0u; i < s_pCfg->vehicleCount; i++)
         {
-            if (vehicleRefuel(&s_pCfg->pVehicles[i]) != MM_OK)
+            if (vehicleRefuel(&s_pCfg->pVehicles[i]) != FM_OK)
             {
                 fails++;
             }
