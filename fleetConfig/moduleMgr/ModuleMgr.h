@@ -20,17 +20,17 @@
 
 /* ---- Konfigurasyon tipleri (ModuleMgr tanimlar, entegrator doldurur) --- */
 
-/* Filodaki bir arac. Tipe uymayan arayuz pointer'i NULL olmali:
+/* Filodaki bir arac. 'type' hangi arayuzun kullanilacagini belirler;
+ * tipe uymayan arayuz pointer'i NULL olmali:
  *   VEHICLE_TYPE_CAR   -> pCar dolu,   pTruck NULL
- *   VEHICLE_TYPE_TRUCK -> pTruck dolu, pCar NULL                          */
+ *   VEHICLE_TYPE_TRUCK -> pTruck dolu, pCar NULL
+ * Ortak islemler secilen arayuzun 'common' alanindan cagrilir.            */
 typedef struct
 {
-    VehicleId_t                id;
-    VehicleType_t              type;
-    uint8_t                    instance;   /* vendor icindeki arac numarasi */
-    const VehicleCommonIfc_t  *pCommon;
-    const CarIfc_t            *pCar;
-    const TruckIfc_t          *pTruck;
+    VehicleId_t        id;
+    VehicleType_t      type;
+    const CarIfc_t    *pCar;
+    const TruckIfc_t  *pTruck;
 } ModuleMgr_VehicleCfg_t;
 
 typedef struct

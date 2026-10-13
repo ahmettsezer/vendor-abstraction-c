@@ -2,48 +2,52 @@
  * @file    VehicleIfc.h
  * @brief   [fleetConfig] Vendor'larin (arac markalarinin) implement ettigi arayuzler.
  *
- *          Her arac ORTAK arayuzu implement eder. Ek olarak tipine gore
- *          SADECE BIR tipe ozel arayuzu implement eder:
+ *          Her arac tipinin TEK bir arayuzu vardir ve ortak islemler bu
+ *          arayuzun ICINDE, 'common' alaninda bulunur:
  *
- *              Otomobil : VehicleCommonIfc_t + CarIfc_t
- *              Tir      : VehicleCommonIfc_t + TruckIfc_t
+ *              CarIfc_t   = { common, getSeatCount, setPassengers }
+ *              TruckIfc_t = { common, getMaxLoadKg, getLoadKg, loadCargo, unloadCargo }
  *
- *          'instance': Bir marka filoda birden fazla araca sahip olabilir
- *          (ornegin iki Toyota). Vendor hangi aracin kastedildigini bu
- *          numaradan anlar. Numarayi entegrator konfigurasyonda verir.
+ *          Ortak islemler ayri bir alt yapida (VehicleCommonIfc_t) tutulur ki
+ *          ModuleMgr "sur", "yakit al" gibi islemleri aracin tipinden bagimsiz,
+ *          tek bir kodla cagirabilsin.
  *
- *          ModuleMgr_Init, konfigurasyondaki her arac icin tum fonksiyon
- *          pointer'larinin dolu (NULL degil) oldugunu dogrular. Bu yuzden
- *          ModuleMgr cagri aninda tekrar NULL kontrolu yapmaz.
+ *          Bir arayuz tablosu = filodaki BIR arac. Ayni tablo iki farkli ID'ye
+ *          verilemez; ModuleMgr_Init bunu reddeder.
+ *
+ *          ModuleMgr_Init tum fonksiyon pointer'larinin dolu (NULL degil)
+ *          oldugunu dogrular; bu yuzden cagri aninda tekrar kontrol edilmez.
  */
 #ifndef VEHICLE_IFC_H
 #define VEHICLE_IFC_H
 
 #include "ModuleMgr_Types.h"
 
-/* ---- Tum araclar ------------------------------------------------------- */
+/* ---- Tum araclarda ortak islemler (tipe ozel arayuzlerin icinde) -------- */
 typedef struct
 {
-    MM_Ret_t (*getInfo)  (uint8_t instance, VehicleInfo_t *pInfo);
-    MM_Ret_t (*drive)    (uint8_t instance, uint32_t km);   /* km ekler, yakit harcar */
-    MM_Ret_t (*refuel)   (uint8_t instance);                /* depoyu doldurur        */
-    MM_Ret_t (*doService)(uint8_t instance);                /* bakim sayacini sifirlar */
+    MM_Ret_t (*getInfo)  (VehicleInfo_t *pInfo);
+    MM_Ret_t (*drive)    (uint32_t km);    /* km ekler, yakit harcar  */
+    MM_Ret_t (*refuel)   (void);           /* depoyu doldurur         */
+    MM_Ret_t (*doService)(void);           /* bakim sayacini sifirlar */
 } VehicleCommonIfc_t;
 
-/* ---- Sadece otomobiller ------------------------------------------------ */
+/* ---- Otomobil arayuzu --------------------------------------------------- */
 typedef struct
 {
-    MM_Ret_t (*getSeatCount) (uint8_t instance, uint8_t *pSeats);
-    MM_Ret_t (*setPassengers)(uint8_t instance, uint8_t count);   /* 0 = yolcular indi */
+    VehicleCommonIfc_t common;
+    MM_Ret_t (*getSeatCount) (uint8_t *pSeats);
+    MM_Ret_t (*setPassengers)(uint8_t count);    /* 0 = yolcular indi */
 } CarIfc_t;
 
-/* ---- Sadece tirlar ----------------------------------------------------- */
+/* ---- Tir arayuzu -------------------------------------------------------- */
 typedef struct
 {
-    MM_Ret_t (*getMaxLoadKg)(uint8_t instance, uint32_t *pKg);
-    MM_Ret_t (*getLoadKg)   (uint8_t instance, uint32_t *pKg);
-    MM_Ret_t (*loadCargo)   (uint8_t instance, uint32_t kg);    /* mevcut yuke ekler */
-    MM_Ret_t (*unloadCargo) (uint8_t instance);                 /* tum yuku bosaltir */
+    VehicleCommonIfc_t common;
+    MM_Ret_t (*getMaxLoadKg)(uint32_t *pKg);
+    MM_Ret_t (*getLoadKg)   (uint32_t *pKg);
+    MM_Ret_t (*loadCargo)   (uint32_t kg);       /* mevcut yuke ekler */
+    MM_Ret_t (*unloadCargo) (void);              /* tum yuku bosaltir */
 } TruckIfc_t;
 
 #endif /* VEHICLE_IFC_H */

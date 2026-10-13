@@ -15,6 +15,7 @@
 #include "ModuleMgr.h"
 #include "Integrator_Cfg.h"
 #include "Toyota.h"
+#include "Ford.h"
 #include "Man.h"
 #include "Volvo.h"
 
@@ -172,9 +173,10 @@ int main(void)
     /* 1) Vendor'lar kendi araclarini hazirlar; ModuleMgr filoyu dogrular. */
     title("1) Init");
     (void)printf("Toyota_Init() = %s\n", retStr(Toyota_Init()));
+    (void)printf("Ford_Init()   = %s\n", retStr(Ford_Init()));
     (void)printf("Man_Init()    = %s\n", retStr(Man_Init()));
     (void)printf("Volvo_Init()  = %s\n", retStr(Volvo_Init()));
-    (void)printf("ModuleMgr_Init(&Integrator_FleetCfg) = %s  (tip/arayuz/instance dogrulandi)\n\n",
+    (void)printf("ModuleMgr_Init(&Integrator_FleetCfg) = %s  (tip/arayuz/tekrar dogrulandi)\n\n",
                  retStr(ModuleMgr_Init(&Integrator_FleetCfg)));
     printFleet();
 
@@ -195,8 +197,8 @@ int main(void)
 
     /* 3) Yolcu gorevleri: yolcu sayisina YETEN EN KUCUK bos otomobil secilir. */
     title("3) Yolcu gorevleri");
-    passengerJob(4u, 300u);    /* Corolla (5) yeter, Proace (8) buyuk gorevlere kalir */
-    passengerJob(6u, 120u);    /* Corolla yetmez -> Proace                          */
+    passengerJob(4u, 300u);    /* Corolla (5) yeter, Tourneo (8) buyuk gorevlere kalir */
+    passengerJob(6u, 120u);    /* Corolla yetmez -> Tourneo                          */
 
     /* 4) Yuk gorevleri: yuke YETEN EN KUCUK kapasiteli bos tir secilir. */
     title("4) Yuk gorevleri");
@@ -205,8 +207,8 @@ int main(void)
 
     /* 5) Kurallar: tip hatasi ModuleMgr'da, kapasite/yakit hatasi vendor'da yakalanir. */
     title("5) Tip ve kapasite kontrolleri");
-    (void)printf("ModuleMgr_Truck_LoadCargo(%u, 500)       <- otomobile yuk\n", (unsigned)FLEET_ID_COROLLA);
-    (void)result(ModuleMgr_Truck_LoadCargo(FLEET_ID_COROLLA, 500u));
+    (void)printf("ModuleMgr_Truck_LoadCargo(%u, 500)       <- otomobile yuk\n", (unsigned)FLEET_ID_TOYOTA_COROLLA);
+    (void)result(ModuleMgr_Truck_LoadCargo(FLEET_ID_TOYOTA_COROLLA, 500u));
     (void)printf("ModuleMgr_Car_SetPassengers(%u, 2)        <- tira yolcu\n", (unsigned)FLEET_ID_MAN_TGX);
     (void)result(ModuleMgr_Car_SetPassengers(FLEET_ID_MAN_TGX, 2u));
     (void)printf("ModuleMgr_Truck_LoadCargo(%u, 5000)      <- kapasite asimi\n", (unsigned)FLEET_ID_MAN_TGX);
@@ -224,10 +226,10 @@ int main(void)
 
     /* 6) Gorevler biter: yolcular iner, yukler bosaltilir. */
     title("6) Gorev sonu");
-    (void)printf("ModuleMgr_Car_SetPassengers(%u, 0)\n", (unsigned)FLEET_ID_COROLLA);
-    (void)result(ModuleMgr_Car_SetPassengers(FLEET_ID_COROLLA, 0u));
-    (void)printf("ModuleMgr_Car_SetPassengers(%u, 0)\n", (unsigned)FLEET_ID_PROACE);
-    (void)result(ModuleMgr_Car_SetPassengers(FLEET_ID_PROACE, 0u));
+    (void)printf("ModuleMgr_Car_SetPassengers(%u, 0)\n", (unsigned)FLEET_ID_TOYOTA_COROLLA);
+    (void)result(ModuleMgr_Car_SetPassengers(FLEET_ID_TOYOTA_COROLLA, 0u));
+    (void)printf("ModuleMgr_Car_SetPassengers(%u, 0)\n", (unsigned)FLEET_ID_FORD_TOURNEO);
+    (void)result(ModuleMgr_Car_SetPassengers(FLEET_ID_FORD_TOURNEO, 0u));
     (void)printf("ModuleMgr_Truck_UnloadCargo(%u)\n", (unsigned)FLEET_ID_MAN_TGX);
     (void)result(ModuleMgr_Truck_UnloadCargo(FLEET_ID_MAN_TGX));
     (void)printf("ModuleMgr_Truck_UnloadCargo(%u)\n", (unsigned)FLEET_ID_VOLVO_FH);

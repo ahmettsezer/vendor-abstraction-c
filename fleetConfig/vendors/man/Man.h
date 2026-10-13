@@ -1,18 +1,17 @@
 /**
  * @file    Man.h
- * @brief   [fleetConfig] MAN: TIR arayuzunu implement eden vendor.
+ * @brief   [fleetConfig] MAN TGX: TIR arayuzunu implement eden vendor.
+ *
+ *          Disariya tek bir arayuz tablosu acar: Man_TruckIfc.
+ *          Ortak islemler tablonun 'common' alaninda, tira ozel islemler
+ *          tablonun kendisindedir.
  */
 #ifndef MAN_H
 #define MAN_H
 
 #include "VehicleIfc.h"
 
-/* MAN'in bu filodaki araclari (instance numaralari). */
-#define MAN_TGX             (0u)
-#define MAN_VEHICLE_COUNT   (1u)
-
-extern const VehicleCommonIfc_t Man_CommonIfc;
-extern const TruckIfc_t         Man_TruckIfc;
+extern const TruckIfc_t Man_TruckIfc;
 
 MM_Ret_t Man_Init(void);
 

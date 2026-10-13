@@ -5,6 +5,9 @@
  *          - Hicbir vendor (marka) header'i include edilmez.
  *          - Konfigurasyon Init'te BIR KEZ atanan tek bir const pointer'da
  *            tutulur; gosterdigi tablo entegratorde 'const' ve flash'ta.
+ *          - Her aracin tek bir arayuzu vardir (tipine gore CarIfc_t veya
+ *            TruckIfc_t). Ortak islemler bu arayuzun 'common' alanindan,
+ *            tipten bagimsiz olarak cagrilir (getCommon).
  *          - Tipe ozel islemlerde once arac tipi kontrol edilir; tip
  *            uymuyorsa vendor'a hic gidilmez (MM_ERR_WRONG_TYPE).
  *          - MISRA: tek cikis noktasi (15.5), switch'te break (16.3),
@@ -17,27 +20,61 @@
 static const ModuleMgr_Config_t *s_pCfg = NULL;
 
 /* ======================================================================== */
+/*  Ortak arayuze erisim                                                    */
+/* ======================================================================== */
+
+/* Aracin tipine gore ortak islemlerin bulundugu yeri doner.
+ * Init'ten gecmis bir konfigurasyonda NULL donmez. */
+static const VehicleCommonIfc_t *getCommon(const ModuleMgr_VehicleCfg_t *pV)
+{
+    const VehicleCommonIfc_t *pCommon = NULL;
+
+    switch (pV->type)
+    {
+        case VEHICLE_TYPE_CAR:
+            if (pV->pCar != NULL)
+            {
+                pCommon = &pV->pCar->common;
+            }
+            break;
+
+        case VEHICLE_TYPE_TRUCK:
+            if (pV->pTruck != NULL)
+            {
+                pCommon = &pV->pTruck->common;
+            }
+            break;
+
+        default:
+            break;
+    }
+    return pCommon;
+}
+
+/* ======================================================================== */
 /*  Konfigurasyon dogrulama                                                 */
 /* ======================================================================== */
 
 static bool isCommonIfcValid(const VehicleCommonIfc_t *pIfc)
 {
-    return (pIfc != NULL) && (pIfc->getInfo != NULL) && (pIfc->drive != NULL) &&
+    return (pIfc->getInfo != NULL) && (pIfc->drive != NULL) &&
            (pIfc->refuel != NULL) && (pIfc->doService != NULL);
 }
 
 static bool isCarIfcValid(const CarIfc_t *pIfc)
 {
-    return (pIfc != NULL) && (pIfc->getSeatCount != NULL) && (pIfc->setPassengers != NULL);
+    return (pIfc != NULL) && isCommonIfcValid(&pIfc->common) &&
+           (pIfc->getSeatCount != NULL) && (pIfc->setPassengers != NULL);
 }
 
 static bool isTruckIfcValid(const TruckIfc_t *pIfc)
 {
-    return (pIfc != NULL) && (pIfc->getMaxLoadKg != NULL) && (pIfc->getLoadKg != NULL) &&
+    return (pIfc != NULL) && isCommonIfcValid(&pIfc->common) &&
+           (pIfc->getMaxLoadKg != NULL) && (pIfc->getLoadKg != NULL) &&
            (pIfc->loadCargo != NULL) && (pIfc->unloadCargo != NULL);
 }
 
-/* Tip ile tipe ozel arayuz pointer'lari uyumlu mu? */
+/* Tip ile arayuz pointer'lari uyumlu mu? */
 static bool isTypeIfcValid(const ModuleMgr_VehicleCfg_t *pV)
 {
     bool ok;
@@ -59,18 +96,21 @@ static bool isTypeIfcValid(const ModuleMgr_VehicleCfg_t *pV)
     return ok;
 }
 
+/* Iki satir ayni araci mi gosteriyor? (ayni ID veya ayni arayuz tablosu) */
+static bool isDuplicate(const ModuleMgr_VehicleCfg_t *pA, const ModuleMgr_VehicleCfg_t *pB)
+{
+    bool sameIfc = ((pA->pCar   != NULL) && (pA->pCar   == pB->pCar)) ||
+                   ((pA->pTruck != NULL) && (pA->pTruck == pB->pTruck));
+
+    return (pA->id == pB->id) || sameIfc;
+}
+
 static MM_Ret_t validateVehicle(const ModuleMgr_Config_t *pCfg, uint8_t index)
 {
     MM_Ret_t ret = MM_OK;
     const ModuleMgr_VehicleCfg_t *pV = &pCfg->pVehicles[index];
-    VehicleInfo_t info;
 
-    if ((pV->id == VEHICLE_ID_INVALID) || !isCommonIfcValid(pV->pCommon) || !isTypeIfcValid(pV))
-    {
-        ret = MM_ERR_CONFIG;
-    }
-    /* instance gecerli mi? Bunu sadece vendor bilir; ona soruyoruz. */
-    else if (pV->pCommon->getInfo(pV->instance, &info) != MM_OK)
+    if ((pV->id == VEHICLE_ID_INVALID) || !isTypeIfcValid(pV))
     {
         ret = MM_ERR_CONFIG;
     }
@@ -78,9 +118,9 @@ static MM_Ret_t validateVehicle(const ModuleMgr_Config_t *pCfg, uint8_t index)
     {
         for (uint8_t j = (uint8_t)(index + 1u); (ret == MM_OK) && (j < pCfg->vehicleCount); j++)
         {
-            if (pV->id == pCfg->pVehicles[j].id)
+            if (isDuplicate(pV, &pCfg->pVehicles[j]))
             {
-                ret = MM_ERR_CONFIG;   /* ayni ID iki kez */
+                ret = MM_ERR_CONFIG;
             }
         }
     }
@@ -139,6 +179,23 @@ static MM_Ret_t getVehicle(VehicleId_t id, const ModuleMgr_VehicleCfg_t **ppV)
         if (*ppV == NULL)
         {
             ret = MM_ERR_NOT_FOUND;
+        }
+    }
+    return ret;
+}
+
+/* Ortak islemler icin: init + id + aracin ortak arayuzu. */
+static MM_Ret_t getVehicleCommon(VehicleId_t id, const VehicleCommonIfc_t **ppCommon)
+{
+    const ModuleMgr_VehicleCfg_t *pV = NULL;
+    MM_Ret_t ret = getVehicle(id, &pV);
+
+    if (ret == MM_OK)
+    {
+        *ppCommon = getCommon(pV);
+        if (*ppCommon == NULL)
+        {
+            ret = MM_ERR_CONFIG;   /* Init'ten gecmis konfigurasyonda olmaz */
         }
     }
     return ret;
@@ -212,13 +269,13 @@ MM_Ret_t ModuleMgr_GetVehicleType(VehicleId_t id, VehicleType_t *pType)
 }
 
 /* ======================================================================== */
-/*  Ortak arayuz                                                            */
+/*  Ortak islemler: tipten bagimsiz, 'common' uzerinden                     */
 /* ======================================================================== */
 
 MM_Ret_t ModuleMgr_GetInfo(VehicleId_t id, VehicleInfo_t *pInfo)
 {
-    const ModuleMgr_VehicleCfg_t *pV = NULL;
-    MM_Ret_t ret = getVehicle(id, &pV);
+    const VehicleCommonIfc_t *pCommon = NULL;
+    MM_Ret_t ret = getVehicleCommon(id, &pCommon);
 
     if (ret == MM_OK)
     {
@@ -228,7 +285,7 @@ MM_Ret_t ModuleMgr_GetInfo(VehicleId_t id, VehicleInfo_t *pInfo)
         }
         else
         {
-            ret = pV->pCommon->getInfo(pV->instance, pInfo);
+            ret = pCommon->getInfo(pInfo);
         }
     }
     return ret;
@@ -236,36 +293,36 @@ MM_Ret_t ModuleMgr_GetInfo(VehicleId_t id, VehicleInfo_t *pInfo)
 
 MM_Ret_t ModuleMgr_Drive(VehicleId_t id, uint32_t km)
 {
-    const ModuleMgr_VehicleCfg_t *pV = NULL;
-    MM_Ret_t ret = getVehicle(id, &pV);
+    const VehicleCommonIfc_t *pCommon = NULL;
+    MM_Ret_t ret = getVehicleCommon(id, &pCommon);
 
     if (ret == MM_OK)
     {
-        ret = pV->pCommon->drive(pV->instance, km);
+        ret = pCommon->drive(km);
     }
     return ret;
 }
 
 MM_Ret_t ModuleMgr_Refuel(VehicleId_t id)
 {
-    const ModuleMgr_VehicleCfg_t *pV = NULL;
-    MM_Ret_t ret = getVehicle(id, &pV);
+    const VehicleCommonIfc_t *pCommon = NULL;
+    MM_Ret_t ret = getVehicleCommon(id, &pCommon);
 
     if (ret == MM_OK)
     {
-        ret = pV->pCommon->refuel(pV->instance);
+        ret = pCommon->refuel();
     }
     return ret;
 }
 
 MM_Ret_t ModuleMgr_Service(VehicleId_t id)
 {
-    const ModuleMgr_VehicleCfg_t *pV = NULL;
-    MM_Ret_t ret = getVehicle(id, &pV);
+    const VehicleCommonIfc_t *pCommon = NULL;
+    MM_Ret_t ret = getVehicleCommon(id, &pCommon);
 
     if (ret == MM_OK)
     {
-        ret = pV->pCommon->doService(pV->instance);
+        ret = pCommon->doService();
     }
     return ret;
 }
@@ -287,7 +344,7 @@ MM_Ret_t ModuleMgr_Car_GetSeatCount(VehicleId_t id, uint8_t *pSeats)
         }
         else
         {
-            ret = pV->pCar->getSeatCount(pV->instance, pSeats);
+            ret = pV->pCar->getSeatCount(pSeats);
         }
     }
     return ret;
@@ -300,7 +357,7 @@ MM_Ret_t ModuleMgr_Car_SetPassengers(VehicleId_t id, uint8_t count)
 
     if (ret == MM_OK)
     {
-        ret = pV->pCar->setPassengers(pV->instance, count);
+        ret = pV->pCar->setPassengers(count);
     }
     return ret;
 }
@@ -322,7 +379,7 @@ MM_Ret_t ModuleMgr_Truck_GetMaxLoad(VehicleId_t id, uint32_t *pKg)
         }
         else
         {
-            ret = pV->pTruck->getMaxLoadKg(pV->instance, pKg);
+            ret = pV->pTruck->getMaxLoadKg(pKg);
         }
     }
     return ret;
@@ -341,7 +398,7 @@ MM_Ret_t ModuleMgr_Truck_GetLoad(VehicleId_t id, uint32_t *pKg)
         }
         else
         {
-            ret = pV->pTruck->getLoadKg(pV->instance, pKg);
+            ret = pV->pTruck->getLoadKg(pKg);
         }
     }
     return ret;
@@ -354,7 +411,7 @@ MM_Ret_t ModuleMgr_Truck_LoadCargo(VehicleId_t id, uint32_t kg)
 
     if (ret == MM_OK)
     {
-        ret = pV->pTruck->loadCargo(pV->instance, kg);
+        ret = pV->pTruck->loadCargo(kg);
     }
     return ret;
 }
@@ -366,7 +423,7 @@ MM_Ret_t ModuleMgr_Truck_UnloadCargo(VehicleId_t id)
 
     if (ret == MM_OK)
     {
-        ret = pV->pTruck->unloadCargo(pV->instance);
+        ret = pV->pTruck->unloadCargo();
     }
     return ret;
 }
@@ -393,30 +450,34 @@ MM_Ret_t ModuleMgr_GetFleetSummary(ModuleMgr_FleetSummary_t *pSummary)
 
         for (uint8_t i = 0u; i < s_pCfg->vehicleCount; i++)
         {
-            const ModuleMgr_VehicleCfg_t *pV = &s_pCfg->pVehicles[i];
+            const ModuleMgr_VehicleCfg_t *pV      = &s_pCfg->pVehicles[i];
+            const VehicleCommonIfc_t     *pCommon = getCommon(pV);
             VehicleInfo_t info;
             uint8_t  seats = 0u;
             uint32_t maxKg = 0u;
 
             pSummary->vehicleCount[pV->type]++;   /* type, Init'te dogrulandi */
 
-            if (pV->pCommon->getInfo(pV->instance, &info) == MM_OK)
+            if (pCommon != NULL)
             {
-                pSummary->totalOdometerKm += info.odometerKm;
+                if (pCommon->getInfo(&info) == MM_OK)
+                {
+                    pSummary->totalOdometerKm += info.odometerKm;
+                }
             }
 
             /* Tipe ozel bilgi: ModuleMgr tipe gore dogru arayuzu secer. */
             switch (pV->type)
             {
                 case VEHICLE_TYPE_CAR:
-                    if (pV->pCar->getSeatCount(pV->instance, &seats) == MM_OK)
+                    if (pV->pCar->getSeatCount(&seats) == MM_OK)
                     {
                         pSummary->totalSeats += seats;
                     }
                     break;
 
                 case VEHICLE_TYPE_TRUCK:
-                    if (pV->pTruck->getMaxLoadKg(pV->instance, &maxKg) == MM_OK)
+                    if (pV->pTruck->getMaxLoadKg(&maxKg) == MM_OK)
                     {
                         pSummary->totalMaxLoadKg += maxKg;
                     }
@@ -430,15 +491,19 @@ MM_Ret_t ModuleMgr_GetFleetSummary(ModuleMgr_FleetSummary_t *pSummary)
     return ret;
 }
 
-/* Arac bos mu? (ortak arayuzden) */
+/* Arac bos mu? (ortak islemlerden) */
 static bool isAvailable(const ModuleMgr_VehicleCfg_t *pV)
 {
+    const VehicleCommonIfc_t *pCommon = getCommon(pV);
     VehicleInfo_t info;
     bool available = false;
 
-    if (pV->pCommon->getInfo(pV->instance, &info) == MM_OK)
+    if (pCommon != NULL)
     {
-        available = (info.status == VEHICLE_STATUS_AVAILABLE);
+        if (pCommon->getInfo(&info) == MM_OK)
+        {
+            available = (info.status == VEHICLE_STATUS_AVAILABLE);
+        }
     }
     return available;
 }
@@ -466,7 +531,7 @@ MM_Ret_t ModuleMgr_FindCarForPassengers(uint8_t passengers, VehicleId_t *pId)
 
             if ((pV->type == VEHICLE_TYPE_CAR) && isAvailable(pV))
             {
-                if (pV->pCar->getSeatCount(pV->instance, &seats) == MM_OK)
+                if (pV->pCar->getSeatCount(&seats) == MM_OK)
                 {
                     /* yeten en kucuk arac: buyuk araclar buyuk gorevlere kalsin */
                     if ((seats >= passengers) && (seats < bestSeats))
@@ -505,7 +570,7 @@ MM_Ret_t ModuleMgr_FindTruckForLoad(uint32_t kg, VehicleId_t *pId)
 
             if ((pV->type == VEHICLE_TYPE_TRUCK) && isAvailable(pV))
             {
-                if (pV->pTruck->getMaxLoadKg(pV->instance, &maxKg) == MM_OK)
+                if (pV->pTruck->getMaxLoadKg(&maxKg) == MM_OK)
                 {
                     if ((maxKg >= kg) && (maxKg < bestKg))
                     {
@@ -534,7 +599,7 @@ MM_Ret_t ModuleMgr_IsServiceDue(VehicleId_t id, bool *pDue)
         }
         else
         {
-            ret = pV->pCommon->getInfo(pV->instance, &info);
+            ret = ModuleMgr_GetInfo(id, &info);
             if (ret == MM_OK)
             {
                 /* Bakim araligi aracin TIPINE gore konfigurasyondan gelir. */
@@ -558,11 +623,19 @@ MM_Ret_t ModuleMgr_RefuelAll(uint8_t *pFailCount)
     {
         for (uint8_t i = 0u; i < s_pCfg->vehicleCount; i++)
         {
-            const ModuleMgr_VehicleCfg_t *pV = &s_pCfg->pVehicles[i];
+            const VehicleCommonIfc_t *pCommon = getCommon(&s_pCfg->pVehicles[i]);
 
-            if (pV->pCommon->refuel(pV->instance) != MM_OK)
+            if (pCommon == NULL)
             {
                 fails++;
+            }
+            else if (pCommon->refuel() != MM_OK)
+            {
+                fails++;
+            }
+            else
+            {
+                /* basarili */
             }
         }
     }

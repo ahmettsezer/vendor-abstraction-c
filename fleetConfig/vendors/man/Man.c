@@ -1,6 +1,6 @@
 /**
  * @file    Man.c
- * @brief   [fleetConfig] MAN tir implementasyonu.
+ * @brief   [fleetConfig] MAN TGX tir implementasyonu.
  *
  *          Yakit tuketimi (100 km'de depo yuzdesi):
  *              bos tuketim + her 5 ton yuk icin %1
@@ -9,212 +9,123 @@
 #include <stdio.h>
 #include "Man.h"
 
-#define MAN_KG_PER_EXTRA_PCT    (5000u)   /* 5 ton yuk = 100 km'de +%1 */
+/* Aracin degismeyen ozellikleri + teslim alindigi andaki durumu. */
+#define MAN_MODEL                 "TGX 18.510"
+#define MAN_MODEL_YEAR            (2020u)
+#define MAN_FUEL_TYPE             (FUEL_DIESEL)
+#define MAN_MAX_LOAD_KG           (20000u)
+#define MAN_BASE_PCT_PER_100KM    (9u)
+#define MAN_KG_PER_EXTRA_PCT      (5000u)   /* 5 ton yuk = 100 km'de +%1 */
+#define MAN_INIT_ODOMETER_KM      (412000u)
+#define MAN_INIT_SERVICE_KM       (29700u)
+#define MAN_INIT_FUEL_PCT         (80u)
 
-typedef struct
+/* Aracin degisen durumu. */
+static uint32_t s_odometerKm     = 0u;
+static uint32_t s_kmSinceService = 0u;
+static uint8_t  s_fuelPct        = 0u;
+static uint32_t s_loadKg         = 0u;
+
+/* ---- Ortak islemler ----------------------------------------------------- */
+static MM_Ret_t man_getInfo(VehicleInfo_t *pInfo)
 {
-    const char *pModel;
-    uint16_t    modelYear;
-    FuelType_t  fuelType;
-    uint32_t    maxLoadKg;
-    uint8_t     baseConsumptionPctPer100Km;
-    uint32_t    initOdometerKm;
-    uint32_t    initKmSinceService;
-    uint8_t     initFuelPct;
-} ManModel_t;
+    pInfo->pBrand         = "MAN";
+    pInfo->pModel         = MAN_MODEL;
+    pInfo->modelYear      = MAN_MODEL_YEAR;
+    pInfo->fuelType       = MAN_FUEL_TYPE;
+    pInfo->odometerKm     = s_odometerKm;
+    pInfo->kmSinceService = s_kmSinceService;
+    pInfo->fuelLevelPct   = s_fuelPct;
+    pInfo->status         = (s_loadKg > 0u) ? VEHICLE_STATUS_IN_USE : VEHICLE_STATUS_AVAILABLE;
+    return MM_OK;
+}
 
-typedef struct
-{
-    uint32_t odometerKm;
-    uint32_t kmSinceService;
-    uint8_t  fuelPct;
-    uint32_t loadKg;
-} ManState_t;
-
-static const ManModel_t s_models[MAN_VEHICLE_COUNT] =
-{
-    /* MAN_TGX */ { "TGX 18.510", 2020u, FUEL_DIESEL, 20000u, 9u, 412000u, 29700u, 80u },
-};
-
-static ManState_t s_state[MAN_VEHICLE_COUNT];
-
-/* ---- Ortak arayuz ------------------------------------------------------- */
-static MM_Ret_t man_getInfo(uint8_t instance, VehicleInfo_t *pInfo)
+static MM_Ret_t man_drive(uint32_t km)
 {
     MM_Ret_t ret = MM_OK;
+    uint32_t pctPer100Km = MAN_BASE_PCT_PER_100KM + (s_loadKg / MAN_KG_PER_EXTRA_PCT);
+    uint32_t needPct     = (km * pctPer100Km) / 100u;
 
-    if (instance >= MAN_VEHICLE_COUNT)
+    if (needPct > (uint32_t)s_fuelPct)
     {
-        ret = MM_ERR_PARAM;
+        (void)printf("    [MAN] " MAN_MODEL ": %lu km icin yakit yetersiz (gerekli %%%lu, depoda %%%u)\n",
+                     (unsigned long)km, (unsigned long)needPct, (unsigned)s_fuelPct);
+        ret = MM_ERR_LOW_FUEL;
     }
     else
     {
-        const ManModel_t *pM = &s_models[instance];
-        const ManState_t *pS = &s_state[instance];
-
-        pInfo->pBrand         = "MAN";
-        pInfo->pModel         = pM->pModel;
-        pInfo->modelYear      = pM->modelYear;
-        pInfo->fuelType       = pM->fuelType;
-        pInfo->odometerKm     = pS->odometerKm;
-        pInfo->kmSinceService = pS->kmSinceService;
-        pInfo->fuelLevelPct   = pS->fuelPct;
-        pInfo->status         = (pS->loadKg > 0u) ? VEHICLE_STATUS_IN_USE : VEHICLE_STATUS_AVAILABLE;
+        s_odometerKm     += km;
+        s_kmSinceService += km;
+        s_fuelPct         = (uint8_t)((uint32_t)s_fuelPct - needPct);
+        (void)printf("    [MAN] " MAN_MODEL ": %lu km gidildi (%lu kg yukle), depo %%%u\n",
+                     (unsigned long)km, (unsigned long)s_loadKg, (unsigned)s_fuelPct);
     }
     return ret;
 }
 
-static MM_Ret_t man_drive(uint8_t instance, uint32_t km)
+static MM_Ret_t man_refuel(void)
 {
-    MM_Ret_t ret = MM_OK;
-
-    if (instance >= MAN_VEHICLE_COUNT)
-    {
-        ret = MM_ERR_PARAM;
-    }
-    else
-    {
-        ManState_t *pS = &s_state[instance];
-        uint32_t pctPer100Km = (uint32_t)s_models[instance].baseConsumptionPctPer100Km +
-                               (pS->loadKg / MAN_KG_PER_EXTRA_PCT);
-        uint32_t needPct = (km * pctPer100Km) / 100u;
-
-        if (needPct > (uint32_t)pS->fuelPct)
-        {
-            (void)printf("    [MAN] %s: %lu km icin yakit yetersiz (gerekli %%%lu, depoda %%%u)\n",
-                         s_models[instance].pModel, (unsigned long)km,
-                         (unsigned long)needPct, (unsigned)pS->fuelPct);
-            ret = MM_ERR_LOW_FUEL;
-        }
-        else
-        {
-            pS->odometerKm     += km;
-            pS->kmSinceService += km;
-            pS->fuelPct         = (uint8_t)((uint32_t)pS->fuelPct - needPct);
-            (void)printf("    [MAN] %s: %lu km gidildi (%lu kg yukle), depo %%%u\n",
-                         s_models[instance].pModel, (unsigned long)km,
-                         (unsigned long)pS->loadKg, (unsigned)pS->fuelPct);
-        }
-    }
-    return ret;
+    s_fuelPct = 100u;
+    (void)printf("    [MAN] " MAN_MODEL ": depo dolduruldu\n");
+    return MM_OK;
 }
 
-static MM_Ret_t man_refuel(uint8_t instance)
+static MM_Ret_t man_doService(void)
 {
-    MM_Ret_t ret = MM_OK;
-
-    if (instance >= MAN_VEHICLE_COUNT)
-    {
-        ret = MM_ERR_PARAM;
-    }
-    else
-    {
-        s_state[instance].fuelPct = 100u;
-        (void)printf("    [MAN] %s: depo dolduruldu\n", s_models[instance].pModel);
-    }
-    return ret;
+    s_kmSinceService = 0u;
+    (void)printf("    [MAN] " MAN_MODEL ": bakim yapildi\n");
+    return MM_OK;
 }
 
-static MM_Ret_t man_doService(uint8_t instance)
+/* ---- Tira ozel islemler ------------------------------------------------- */
+static MM_Ret_t man_getMaxLoadKg(uint32_t *pKg)
 {
-    MM_Ret_t ret = MM_OK;
-
-    if (instance >= MAN_VEHICLE_COUNT)
-    {
-        ret = MM_ERR_PARAM;
-    }
-    else
-    {
-        s_state[instance].kmSinceService = 0u;
-        (void)printf("    [MAN] %s: bakim yapildi\n", s_models[instance].pModel);
-    }
-    return ret;
+    *pKg = MAN_MAX_LOAD_KG;
+    return MM_OK;
 }
 
-/* ---- Tir arayuzu -------------------------------------------------------- */
-static MM_Ret_t man_getMaxLoadKg(uint8_t instance, uint32_t *pKg)
+static MM_Ret_t man_getLoadKg(uint32_t *pKg)
 {
-    MM_Ret_t ret = MM_OK;
-
-    if (instance >= MAN_VEHICLE_COUNT)
-    {
-        ret = MM_ERR_PARAM;
-    }
-    else
-    {
-        *pKg = s_models[instance].maxLoadKg;
-    }
-    return ret;
+    *pKg = s_loadKg;
+    return MM_OK;
 }
 
-static MM_Ret_t man_getLoadKg(uint8_t instance, uint32_t *pKg)
+static MM_Ret_t man_loadCargo(uint32_t kg)
 {
     MM_Ret_t ret = MM_OK;
 
-    if (instance >= MAN_VEHICLE_COUNT)
+    if ((s_loadKg + kg) > MAN_MAX_LOAD_KG)
     {
-        ret = MM_ERR_PARAM;
-    }
-    else
-    {
-        *pKg = s_state[instance].loadKg;
-    }
-    return ret;
-}
-
-static MM_Ret_t man_loadCargo(uint8_t instance, uint32_t kg)
-{
-    MM_Ret_t ret = MM_OK;
-
-    if (instance >= MAN_VEHICLE_COUNT)
-    {
-        ret = MM_ERR_PARAM;
-    }
-    else if ((s_state[instance].loadKg + kg) > s_models[instance].maxLoadKg)
-    {
-        (void)printf("    [MAN] %s: +%lu kg yuklenemez (mevcut %lu, kapasite %lu kg)\n",
-                     s_models[instance].pModel, (unsigned long)kg,
-                     (unsigned long)s_state[instance].loadKg,
-                     (unsigned long)s_models[instance].maxLoadKg);
+        (void)printf("    [MAN] " MAN_MODEL ": +%lu kg yuklenemez (mevcut %lu, kapasite %lu kg)\n",
+                     (unsigned long)kg, (unsigned long)s_loadKg, (unsigned long)MAN_MAX_LOAD_KG);
         ret = MM_ERR_OVER_CAPACITY;
     }
     else
     {
-        s_state[instance].loadKg += kg;
-        (void)printf("    [MAN] %s: %lu kg yuklendi (toplam %lu kg)\n",
-                     s_models[instance].pModel, (unsigned long)kg,
-                     (unsigned long)s_state[instance].loadKg);
+        s_loadKg += kg;
+        (void)printf("    [MAN] " MAN_MODEL ": %lu kg yuklendi (toplam %lu kg)\n",
+                     (unsigned long)kg, (unsigned long)s_loadKg);
     }
     return ret;
 }
 
-static MM_Ret_t man_unloadCargo(uint8_t instance)
+static MM_Ret_t man_unloadCargo(void)
 {
-    MM_Ret_t ret = MM_OK;
-
-    if (instance >= MAN_VEHICLE_COUNT)
-    {
-        ret = MM_ERR_PARAM;
-    }
-    else
-    {
-        s_state[instance].loadKg = 0u;
-        (void)printf("    [MAN] %s: yuk bosaltildi\n", s_models[instance].pModel);
-    }
-    return ret;
+    s_loadKg = 0u;
+    (void)printf("    [MAN] " MAN_MODEL ": yuk bosaltildi\n");
+    return MM_OK;
 }
 
-/* ---- Arayuz tablolari: const, tanimlandigi satirda dolu ----------------- */
-const VehicleCommonIfc_t Man_CommonIfc =
-{
-    .getInfo   = man_getInfo,
-    .drive     = man_drive,
-    .refuel    = man_refuel,
-    .doService = man_doService,
-};
-
+/* ---- Arayuz tablosu: const, tanimlandigi satirda dolu ------------------- */
 const TruckIfc_t Man_TruckIfc =
 {
+    .common =
+    {
+        .getInfo   = man_getInfo,
+        .drive     = man_drive,
+        .refuel    = man_refuel,
+        .doService = man_doService,
+    },
     .getMaxLoadKg = man_getMaxLoadKg,
     .getLoadKg    = man_getLoadKg,
     .loadCargo    = man_loadCargo,
@@ -223,12 +134,9 @@ const TruckIfc_t Man_TruckIfc =
 
 MM_Ret_t Man_Init(void)
 {
-    for (uint8_t i = 0u; i < MAN_VEHICLE_COUNT; i++)
-    {
-        s_state[i].odometerKm     = s_models[i].initOdometerKm;
-        s_state[i].kmSinceService = s_models[i].initKmSinceService;
-        s_state[i].fuelPct        = s_models[i].initFuelPct;
-        s_state[i].loadKg         = 0u;
-    }
+    s_odometerKm     = MAN_INIT_ODOMETER_KM;
+    s_kmSinceService = MAN_INIT_SERVICE_KM;
+    s_fuelPct        = MAN_INIT_FUEL_PCT;
+    s_loadKg         = 0u;
     return MM_OK;
 }

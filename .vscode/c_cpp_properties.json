@@ -55,6 +55,7 @@
             "includePath": [
                 "${workspaceFolder}/fleetConfig/moduleMgr",
                 "${workspaceFolder}/fleetConfig/vendors/toyota",
+                "${workspaceFolder}/fleetConfig/vendors/ford",
                 "${workspaceFolder}/fleetConfig/vendors/man",
                 "${workspaceFolder}/fleetConfig/vendors/volvo",
                 "${workspaceFolder}/fleetConfig/integrator"

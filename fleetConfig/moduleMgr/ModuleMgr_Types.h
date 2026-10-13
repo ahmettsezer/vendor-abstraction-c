@@ -42,7 +42,7 @@ typedef enum
 typedef enum
 {
     MM_OK = 0,
-    MM_ERR_PARAM,           /* Gecersiz parametre / NULL pointer / instance  */
+    MM_ERR_PARAM,           /* Gecersiz parametre / NULL pointer             */
     MM_ERR_NOT_INIT,        /* ModuleMgr init edilmemis                      */
     MM_ERR_CONFIG,          /* Konfigurasyon tablosu hatali                  */
     MM_ERR_NOT_FOUND,       /* ID filoda yok / uygun arac bulunamadi         */

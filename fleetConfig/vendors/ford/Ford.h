@@ -1,0 +1,20 @@
+/**
+ * @file    Ford.h
+ * @brief   [fleetConfig] Ford Tourneo Custom: OTOMOBIL arayuzunu implement eden vendor.
+ *
+ *          Disariya tek bir arayuz tablosu acar: Ford_CarIfc.
+ *          Ortak islemler (bilgi, sur, yakit, bakim) bu tablonun 'common'
+ *          alaninda, otomobile ozel islemler tablonun kendisindedir.
+ */
+#ifndef FORD_H
+#define FORD_H
+
+#include "VehicleIfc.h"
+
+/* Derleme aninda dolu, flash'ta duran arayuz tablosu. */
+extern const CarIfc_t Ford_CarIfc;
+
+/* Aracin baslangic durumunu yukler (km, yakit, yolcu). */
+MM_Ret_t Ford_Init(void);
+
+#endif /* FORD_H */
