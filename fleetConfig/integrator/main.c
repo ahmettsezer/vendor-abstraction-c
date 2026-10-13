@@ -6,6 +6,10 @@
  *            "ModuleMgr_xxx(...)" -> entegratorun yaptigi cagri
  *            "    [Marka] ..."     -> ModuleMgr'in yonlendirdigi vendor fonksiyonu
  *            "  = ..."             -> ModuleMgr'in donus degeri
+ *          Entegratorun main'i markalari TANIMAZ: vendor header'i include
+ *          edilmez, vendor init'leri ModuleMgr_Init icinden cagrilir.
+ *          Markalari bilen tek dosya Integrator_Cfg.c'dir.
+ *
  *          Altinda vendor satiri OLMAYAN hatalar ModuleMgr'da yakalanmistir
  *          (ornegin otomobile yuk yuklemek: MM_ERR_WRONG_TYPE).
  *
@@ -14,10 +18,6 @@
 #include <stdio.h>
 #include "ModuleMgr.h"
 #include "Integrator_Cfg.h"
-#include "Toyota.h"
-#include "Ford.h"
-#include "Man.h"
-#include "Volvo.h"
 
 /* ======================================================================== */
 /*  Yazdirma yardimcilari                                                   */
@@ -170,14 +170,12 @@ int main(void)
 {
     (void)setvbuf(stdout, NULL, _IONBF, 0);
 
-    /* 1) Vendor'lar kendi araclarini hazirlar; ModuleMgr filoyu dogrular. */
+    /* 1) Entegrator SADECE ModuleMgr'i init eder. ModuleMgr konfigurasyonu
+     *    dogrular ve her aracin init'ini arayuzu uzerinden kendisi cagirir. */
     title("1) Init");
-    (void)printf("Toyota_Init() = %s\n", retStr(Toyota_Init()));
-    (void)printf("Ford_Init()   = %s\n", retStr(Ford_Init()));
-    (void)printf("Man_Init()    = %s\n", retStr(Man_Init()));
-    (void)printf("Volvo_Init()  = %s\n", retStr(Volvo_Init()));
-    (void)printf("ModuleMgr_Init(&Integrator_FleetCfg) = %s  (tip/arayuz/tekrar dogrulandi)\n\n",
-                 retStr(ModuleMgr_Init(&Integrator_FleetCfg)));
+    (void)printf("ModuleMgr_Init(&Integrator_FleetCfg)\n");
+    (void)result(ModuleMgr_Init(&Integrator_FleetCfg));
+    (void)printf("\n");
     printFleet();
 
     /* 2) Tip bazinda filo ozeti: ModuleMgr her araca tipine uygun soruyu sorar. */

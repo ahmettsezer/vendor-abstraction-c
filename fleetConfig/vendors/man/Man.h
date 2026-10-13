@@ -13,6 +13,4 @@
 
 extern const TruckIfc_t Man_TruckIfc;
 
-MM_Ret_t Man_Init(void);
-
 #endif /* MAN_H */

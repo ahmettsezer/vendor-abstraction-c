@@ -13,6 +13,4 @@
 
 extern const TruckIfc_t Volvo_TruckIfc;
 
-MM_Ret_t Volvo_Init(void);
-
 #endif /* VOLVO_H */

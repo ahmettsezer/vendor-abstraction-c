@@ -56,15 +56,18 @@ islemler her iki arayuzde de ayni isim ve imzayla, dogrudan alan olarak bulunur:
 
 | Arayuz | Kim implement eder | Ortak alanlar | Tipe ozel alanlar |
 |---|---|---|---|
-| `CarIfc_t` | Toyota Corolla, Ford Tourneo Custom | `getInfo`, `drive`, `refuel`, `doService` | `getSeatCount`, `setPassengers` |
-| `TruckIfc_t` | MAN TGX, Volvo FH | `getInfo`, `drive`, `refuel`, `doService` | `getMaxLoadKg`, `getLoadKg`, `loadCargo`, `unloadCargo` |
+| `CarIfc_t` | Toyota Corolla, Ford Tourneo Custom | `init`, `getInfo`, `drive`, `refuel`, `doService` | `getSeatCount`, `setPassengers` |
+| `TruckIfc_t` | MAN TGX, Volvo FH | `init`, `getInfo`, `drive`, `refuel`, `doService` | `getMaxLoadKg`, `getLoadKg`, `loadCargo`, `unloadCargo` |
 
 Entegratorun tablosunda her arac icin `{ id, type, &otomobil, &tir }` yazilir; tipe uymayan
 arayuz `NULL` birakilir. Her vendor tek bir araci temsil eder; bir arayuz tablosu iki
 satirda kullanilamaz. ModuleMgr:
 
 - Init'te tip ile arayuz uyumunu, tum fonksiyon pointer'larini, tekrarlanan ID'yi ve ayni
-  arayuzun iki kez verilmesini dogrular.
+  arayuzun iki kez verilmesini dogrular; ardindan her aracin `init`'ini **kendisi** cagirir.
+  Bir arac init'i hata donerse ModuleMgr init edilmemis kalir (ya hep ya hic).
+- Entegratorun `main`'i markalari tanimaz; sadece `ModuleMgr_Init(&cfg)` cagirir. Markalari
+  bilen tek dosya konfigurasyon tablosudur (`Integrator_Cfg.c`).
 - Ortak islemleri tipe gore dogru arayuzden cagirir (`vehicleDrive` gibi yardimcilarla).
 - Tipe uymayan islemi (otomobile yuk) vendor'a gitmeden `MM_ERR_WRONG_TYPE` ile reddeder.
 - Tipe gore yonetir: bakim araligi tipe gore (otomobil 15.000, tir 30.000 km), yolcuya yeten

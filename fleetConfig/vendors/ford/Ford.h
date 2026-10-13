@@ -14,7 +14,4 @@
 /* Derleme aninda dolu, flash'ta duran arayuz tablosu. */
 extern const CarIfc_t Ford_CarIfc;
 
-/* Aracin baslangic durumunu yukler (km, yakit, yolcu). */
-MM_Ret_t Ford_Init(void);
-
 #endif /* FORD_H */

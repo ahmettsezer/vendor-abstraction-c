@@ -3,6 +3,7 @@
  * @brief   [fleetConfig] Filo yoneticisi implementasyonu.
  *
  *          - Hicbir vendor (marka) header'i include edilmez.
+ *          - Araclarin init'ini entegrator degil ModuleMgr_Init cagirir.
  *          - Konfigurasyon Init'te BIR KEZ atanan tek bir const pointer'da
  *            tutulur; gosterdigi tablo entegratorde 'const' ve flash'ta.
  *          - Her aracin tek bir arayuzu vardir (tipine gore CarIfc_t veya
@@ -23,6 +24,19 @@ static const ModuleMgr_Config_t *s_pCfg = NULL;
 /* ======================================================================== */
 /*  Ortak islemler: tipe gore dogru arayuzden cagri                         */
 /* ======================================================================== */
+
+static MM_Ret_t vehicleInit(const ModuleMgr_VehicleCfg_t *pV)
+{
+    MM_Ret_t ret;
+
+    switch (pV->type)
+    {
+        case VEHICLE_TYPE_CAR:   ret = pV->pCar->init();   break;
+        case VEHICLE_TYPE_TRUCK: ret = pV->pTruck->init(); break;
+        default:                 ret = MM_ERR_CONFIG;      break;
+    }
+    return ret;
+}
 
 static MM_Ret_t vehicleGetInfo(const ModuleMgr_VehicleCfg_t *pV, VehicleInfo_t *pInfo)
 {
@@ -82,7 +96,7 @@ static MM_Ret_t vehicleService(const ModuleMgr_VehicleCfg_t *pV)
 
 static bool isCarIfcValid(const CarIfc_t *pIfc)
 {
-    return (pIfc != NULL) &&
+    return (pIfc != NULL) && (pIfc->init != NULL) &&
            (pIfc->getInfo != NULL) && (pIfc->drive != NULL) &&
            (pIfc->refuel != NULL) && (pIfc->doService != NULL) &&
            (pIfc->getSeatCount != NULL) && (pIfc->setPassengers != NULL);
@@ -90,7 +104,7 @@ static bool isCarIfcValid(const CarIfc_t *pIfc)
 
 static bool isTruckIfcValid(const TruckIfc_t *pIfc)
 {
-    return (pIfc != NULL) &&
+    return (pIfc != NULL) && (pIfc->init != NULL) &&
            (pIfc->getInfo != NULL) && (pIfc->drive != NULL) &&
            (pIfc->refuel != NULL) && (pIfc->doService != NULL) &&
            (pIfc->getMaxLoadKg != NULL) && (pIfc->getLoadKg != NULL) &&
@@ -224,12 +238,28 @@ static MM_Ret_t getVehicleOfType(VehicleId_t id, VehicleType_t type,
 /*  Yasam dongusu ve dolasma                                                */
 /* ======================================================================== */
 
+/* 1) Konfigurasyonu dogrular.
+ * 2) Konfigurasyondaki her aracin init'ini cagirir (entegrator cagirmaz).
+ * Herhangi bir adim basarisizsa ModuleMgr init edilmemis kalir ve hata
+ * doner: yarim bir filoyla calismaya baslanmaz (ya hep ya hic). */
 MM_Ret_t ModuleMgr_Init(const ModuleMgr_Config_t *pCfg)
 {
     MM_Ret_t ret = validateCfg(pCfg);
 
-    /* Hatali konfigurasyon asla saklanmaz -> init edilmemis kalir. */
-    s_pCfg = (ret == MM_OK) ? pCfg : NULL;
+    s_pCfg = NULL;
+
+    if (ret == MM_OK)   /* pCfg burada gecerli */
+    {
+        for (uint8_t i = 0u; (ret == MM_OK) && (i < pCfg->vehicleCount); i++)
+        {
+            ret = vehicleInit(&pCfg->pVehicles[i]);
+        }
+
+        if (ret == MM_OK)
+        {
+            s_pCfg = pCfg;
+        }
+    }
     return ret;
 }
 

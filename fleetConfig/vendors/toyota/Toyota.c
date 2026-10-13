@@ -24,6 +24,18 @@ static uint32_t s_kmSinceService = 0u;
 static uint8_t  s_fuelPct        = 0u;
 static uint8_t  s_passengers     = 0u;
 
+/* ---- Init: entegrator degil ModuleMgr_Init cagirir ---------------------- */
+static MM_Ret_t toyota_init(void)
+{
+    s_odometerKm     = TOYOTA_INIT_ODOMETER_KM;
+    s_kmSinceService = TOYOTA_INIT_SERVICE_KM;
+    s_fuelPct        = TOYOTA_INIT_FUEL_PCT;
+    s_passengers     = 0u;
+    (void)printf("    [Toyota] " TOYOTA_MODEL ": init (%lu km, depo %%%u)\n",
+                 (unsigned long)s_odometerKm, (unsigned)s_fuelPct);
+    return MM_OK;
+}
+
 /* ---- Ortak islemler ----------------------------------------------------- */
 static MM_Ret_t toyota_getInfo(VehicleInfo_t *pInfo)
 {
@@ -110,6 +122,7 @@ static MM_Ret_t toyota_setPassengers(uint8_t count)
 const CarIfc_t Toyota_CarIfc =
 {
     /* ortak */
+    .init      = toyota_init,
     .getInfo   = toyota_getInfo,
     .drive     = toyota_drive,
     .refuel    = toyota_refuel,
@@ -118,12 +131,3 @@ const CarIfc_t Toyota_CarIfc =
     .getSeatCount  = toyota_getSeatCount,
     .setPassengers = toyota_setPassengers,
 };
-
-MM_Ret_t Toyota_Init(void)
-{
-    s_odometerKm     = TOYOTA_INIT_ODOMETER_KM;
-    s_kmSinceService = TOYOTA_INIT_SERVICE_KM;
-    s_fuelPct        = TOYOTA_INIT_FUEL_PCT;
-    s_passengers     = 0u;
-    return MM_OK;
-}

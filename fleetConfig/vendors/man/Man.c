@@ -26,6 +26,18 @@ static uint32_t s_kmSinceService = 0u;
 static uint8_t  s_fuelPct        = 0u;
 static uint32_t s_loadKg         = 0u;
 
+/* ---- Init: entegrator degil ModuleMgr_Init cagirir ---------------------- */
+static MM_Ret_t man_init(void)
+{
+    s_odometerKm     = MAN_INIT_ODOMETER_KM;
+    s_kmSinceService = MAN_INIT_SERVICE_KM;
+    s_fuelPct        = MAN_INIT_FUEL_PCT;
+    s_loadKg         = 0u;
+    (void)printf("    [MAN] " MAN_MODEL ": init (%lu km, depo %%%u)\n",
+                 (unsigned long)s_odometerKm, (unsigned)s_fuelPct);
+    return MM_OK;
+}
+
 /* ---- Ortak islemler ----------------------------------------------------- */
 static MM_Ret_t man_getInfo(VehicleInfo_t *pInfo)
 {
@@ -120,6 +132,7 @@ static MM_Ret_t man_unloadCargo(void)
 const TruckIfc_t Man_TruckIfc =
 {
     /* ortak */
+    .init      = man_init,
     .getInfo   = man_getInfo,
     .drive     = man_drive,
     .refuel    = man_refuel,
@@ -130,12 +143,3 @@ const TruckIfc_t Man_TruckIfc =
     .loadCargo    = man_loadCargo,
     .unloadCargo  = man_unloadCargo,
 };
-
-MM_Ret_t Man_Init(void)
-{
-    s_odometerKm     = MAN_INIT_ODOMETER_KM;
-    s_kmSinceService = MAN_INIT_SERVICE_KM;
-    s_fuelPct        = MAN_INIT_FUEL_PCT;
-    s_loadKg         = 0u;
-    return MM_OK;
-}

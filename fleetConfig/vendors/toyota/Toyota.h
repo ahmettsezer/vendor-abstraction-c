@@ -14,7 +14,4 @@
 /* Derleme aninda dolu, flash'ta duran arayuz tablosu. */
 extern const CarIfc_t Toyota_CarIfc;
 
-/* Aracin baslangic durumunu yukler (km, yakit, yolcu). */
-MM_Ret_t Toyota_Init(void);
-
 #endif /* TOYOTA_H */

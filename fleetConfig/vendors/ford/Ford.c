@@ -24,6 +24,18 @@ static uint32_t s_kmSinceService = 0u;
 static uint8_t  s_fuelPct        = 0u;
 static uint8_t  s_passengers     = 0u;
 
+/* ---- Init: entegrator degil ModuleMgr_Init cagirir ---------------------- */
+static MM_Ret_t ford_init(void)
+{
+    s_odometerKm     = FORD_INIT_ODOMETER_KM;
+    s_kmSinceService = FORD_INIT_SERVICE_KM;
+    s_fuelPct        = FORD_INIT_FUEL_PCT;
+    s_passengers     = 0u;
+    (void)printf("    [Ford] " FORD_MODEL ": init (%lu km, depo %%%u)\n",
+                 (unsigned long)s_odometerKm, (unsigned)s_fuelPct);
+    return MM_OK;
+}
+
 /* ---- Ortak islemler ----------------------------------------------------- */
 static MM_Ret_t ford_getInfo(VehicleInfo_t *pInfo)
 {
@@ -110,6 +122,7 @@ static MM_Ret_t ford_setPassengers(uint8_t count)
 const CarIfc_t Ford_CarIfc =
 {
     /* ortak */
+    .init      = ford_init,
     .getInfo   = ford_getInfo,
     .drive     = ford_drive,
     .refuel    = ford_refuel,
@@ -118,12 +131,3 @@ const CarIfc_t Ford_CarIfc =
     .getSeatCount  = ford_getSeatCount,
     .setPassengers = ford_setPassengers,
 };
-
-MM_Ret_t Ford_Init(void)
-{
-    s_odometerKm     = FORD_INIT_ODOMETER_KM;
-    s_kmSinceService = FORD_INIT_SERVICE_KM;
-    s_fuelPct        = FORD_INIT_FUEL_PCT;
-    s_passengers     = 0u;
-    return MM_OK;
-}

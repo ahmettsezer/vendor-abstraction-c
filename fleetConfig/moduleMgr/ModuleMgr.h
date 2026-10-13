@@ -50,7 +50,9 @@ typedef struct
 } ModuleMgr_FleetSummary_t;
 
 /* ---- Yasam dongusu ------------------------------------------------------ */
-MM_Ret_t ModuleMgr_Init(const ModuleMgr_Config_t *pCfg);   /* dogrular + saklar */
+/* Konfigurasyonu dogrular, her aracin init'ini cagirir ve saklar.
+ * Bir arac init'i hata donerse o hatayi doner; ModuleMgr init edilmemis kalir. */
+MM_Ret_t ModuleMgr_Init(const ModuleMgr_Config_t *pCfg);
 MM_Ret_t ModuleMgr_DeInit(void);
 
 /* ---- Filoyu dolasma ----------------------------------------------------- */

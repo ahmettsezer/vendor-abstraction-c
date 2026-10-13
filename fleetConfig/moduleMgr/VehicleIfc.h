@@ -3,9 +3,12 @@
  * @brief   [fleetConfig] Vendor'larin (arac markalarinin) implement ettigi arayuzler.
  *
  *          Her arac tipinin TEK bir arayuzu vardir. Tum araclarda ortak olan
- *          islemler (bilgi, sur, yakit, bakim) her arayuzde ayni isim ve
+ *          islemler (init, bilgi, sur, yakit, bakim) her arayuzde ayni isim ve
  *          imzayla, dogrudan alan olarak bulunur; ardindan tipe ozel
  *          islemler gelir.
+ *
+ *          'init' entegrator tarafindan degil, ModuleMgr_Init tarafindan
+ *          konfigurasyondaki her arac icin cagrilir.
  *
  *          Bir arayuz tablosu = filodaki BIR arac. Ayni tablo iki farkli ID'ye
  *          verilemez; ModuleMgr_Init bunu reddeder.
@@ -22,6 +25,7 @@
 typedef struct
 {
     /* ortak */
+    MM_Ret_t (*init)         (void);             /* ModuleMgr_Init cagirir  */
     MM_Ret_t (*getInfo)      (VehicleInfo_t *pInfo);
     MM_Ret_t (*drive)        (uint32_t km);      /* km ekler, yakit harcar  */
     MM_Ret_t (*refuel)       (void);             /* depoyu doldurur         */
@@ -35,6 +39,7 @@ typedef struct
 typedef struct
 {
     /* ortak */
+    MM_Ret_t (*init)         (void);             /* ModuleMgr_Init cagirir  */
     MM_Ret_t (*getInfo)      (VehicleInfo_t *pInfo);
     MM_Ret_t (*drive)        (uint32_t km);      /* km ekler, yakit harcar  */
     MM_Ret_t (*refuel)       (void);             /* depoyu doldurur         */
