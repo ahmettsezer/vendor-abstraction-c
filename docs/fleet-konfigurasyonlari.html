@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fleet Konfigürasyonları</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: tek sütun "datasheet" — numaralı bölümler, her varyant aynı iskelette (fikir, yapı, kullanım, artı/eksi, analiz); telefonda tek sütun. */
+:root {
+  --bg: #f6f7f5;
+  --surface: #ffffff;
+  --fg: #1b2420;
+  --muted: #5a6661;
+  --line: #d7ddd9;
+  --accent: #1d6b57;
+  --accent-soft: #e3efea;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0dc;
+  --bad: #a3332b;
+  --bad-soft: #f8e6e4;
+  --good: #2c7a3f;
+  --good-soft: #e5f2e7;
+  --code-bg: #eef1ee;
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111614; --surface: #171e1b; --fg: #e3e9e6; --muted: #98a59f; --line: #2b3632;
+    --accent: #5cc3a3; --accent-soft: #1b2e28; --warn: #e3a64a; --warn-soft: #2e2516;
+    --bad: #ef8a80; --bad-soft: #2f1b19; --good: #7fcf8f; --good-soft: #1a2b1d;
+    --code-bg: #1d2522; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111614; --surface: #171e1b; --fg: #e3e9e6; --muted: #98a59f; --line: #2b3632;
+  --accent: #5cc3a3; --accent-soft: #1b2e28; --warn: #e3a64a; --warn-soft: #2e2516;
+  --bad: #ef8a80; --bad-soft: #2f1b19; --good: #7fcf8f; --good-soft: #1a2b1d;
+  --code-bg: #1d2522; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.65;
+  margin: 0; padding-inline: 16px; padding-block: 0 64px;
+}
+.wrap { max-width: 780px; margin: 0 auto; }
+
+header.doc { padding-block: 40px 28px; border-bottom: 2px solid var(--fg); margin-bottom: 28px; }
+.part { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(28px, 7vw, 40px); line-height: 1.1; margin: 10px 0 12px; text-wrap: balance; }
+.lede { color: var(--muted); margin: 0 0 18px; max-width: 62ch; }
+.meta { font-family: var(--font-mono); font-size: 13px; }
+.meta span { color: var(--muted); }
+
+nav.toc { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; margin-bottom: 40px; }
+nav.toc h2 { font-size: 13px; margin: 0 0 8px; font-family: var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+nav.toc ol { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 2px; }
+nav.toc ol ol { padding-left: 22px; margin-block: 2px 6px; }
+nav.toc a { color: var(--fg); text-decoration: none; display: block; padding: 3px 0; }
+nav.toc a:hover, nav.toc a:focus-visible { color: var(--accent); }
+nav.toc .n { font-family: var(--font-mono); color: var(--muted); font-size: 13px; display: inline-block; min-width: 2.6em; }
+
+section.sec { margin-bottom: 56px; }
+h2.sec-title { font-family: var(--font-display); font-weight: 700; font-size: 26px; line-height: 1.2; margin: 0 0 16px; padding-top: 8px; border-top: 1px solid var(--line); display: flex; gap: 12px; align-items: baseline; text-wrap: balance; }
+h2.sec-title .n { font-family: var(--font-mono); font-size: 15px; color: var(--accent); font-weight: 500; }
+h3 { font-family: var(--font-display); font-weight: 600; font-size: 19px; margin: 26px 0 8px; text-wrap: balance; }
+h4 { font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 20px 0 8px; }
+p { margin: 0 0 12px; max-width: 68ch; }
+ul, ol { padding-left: 1.3em; margin: 0 0 12px; }
+li { margin-bottom: 4px; }
+a { color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+strong { font-weight: 600; }
+code { font-family: var(--font-mono); font-size: .86em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+
+pre { font-family: var(--font-mono); font-size: 13px; line-height: 1.55; background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; overflow-x: auto; margin: 0 0 14px; }
+pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+.c { color: var(--muted); }
+.k { color: var(--accent); }
+
+/* ---------- variant block ---------- */
+article.variant { margin-bottom: 52px; }
+.v-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-bottom: 10px; }
+.v-head h3 { margin: 0; font-size: 22px; }
+.v-head .folder { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+.idea { font-size: 17px; margin-bottom: 14px; }
+
+.pc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 4px 0 16px; }
+.pc > div { border-radius: 6px; padding: 12px 14px; min-width: 0; }
+.pc .plus { background: var(--good-soft); }
+.pc .minus { background: var(--bad-soft); }
+.pc h5 { margin: 0 0 6px; font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; }
+.pc .plus h5 { color: var(--good); }
+.pc .minus h5 { color: var(--bad); }
+.pc ul { margin: 0; padding-left: 1.1em; font-size: 15px; line-height: 1.5; }
+.pc li { margin-bottom: 6px; }
+.pc li:last-child { margin-bottom: 0; }
+@media (max-width: 600px) { .pc { grid-template-columns: 1fr; } }
+
+.sa { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 12px 14px; }
+.sa .grade { display: inline-block; font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: .04em; padding: 2px 8px; border-radius: 3px; margin-bottom: 6px; }
+.grade.g-bad { background: var(--bad-soft); color: var(--bad); }
+.grade.g-ok { background: var(--good-soft); color: var(--good); }
+.grade.g-best { background: var(--accent-soft); color: var(--accent); }
+.sa p:last-child { margin-bottom: 0; }
+
+.note { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 4px 4px 0; margin: 0 0 14px; }
+.note.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+.note p:last-child { margin-bottom: 0; }
+.note .lbl { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; display: block; margin-bottom: 2px; color: var(--accent); }
+.note.warn .lbl { color: var(--warn); }
+
+.tbl { overflow-x: auto; margin: 0 0 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.45; }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: .03em; color: var(--muted); background: var(--code-bg); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.y { color: var(--good); font-weight: 600; }
+td.n { color: var(--bad); font-weight: 600; }
+td.m { color: var(--warn); font-weight: 600; }
+.wide table { min-width: 620px; }
+
+.arch { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0 0 16px; }
+.arch .box { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px; min-width: 0; }
+.arch .box b { font-family: var(--font-display); font-size: 17px; display: block; margin-bottom: 4px; }
+.arch .box span { font-size: 14px; color: var(--muted); display: block; line-height: 1.45; }
+.arch .box.mm { border-color: var(--accent); }
+@media (max-width: 560px) { .arch { grid-template-columns: 1fr; } }
+
+.pick { display: grid; gap: 10px; }
+.pick > div { display: grid; grid-template-columns: 7.5em minmax(0, 1fr); gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; align-items: baseline; }
+.pick b { font-family: var(--font-display); font-size: 17px; }
+.pick span { font-size: 15px; }
+@media (max-width: 480px) { .pick > div { grid-template-columns: 1fr; gap: 2px; } }
+
+dl.gloss { margin: 0; display: grid; gap: 14px; }
+dl.gloss dt { font-weight: 600; }
+dl.gloss dd { margin: 2px 0 0; max-width: 68ch; }
+
+.top { font-family: var(--font-mono); font-size: 12px; text-decoration: none; color: var(--muted); }
+footer { border-top: 1px solid var(--line); padding-top: 16px; color: var(--muted); font-size: 13px; }
+.small { font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="wrap" id="bas">
+
+<header class="doc">
+  <div class="part">Mimari notu · C / gömülü · fleet örnekleri</div>
+  <h1>Fleet Konfigürasyonları</h1>
+  <p class="lede">Aynı filo yöneticisinin dört konfigürasyon biçimi: entegratörün aracı FleetMgr'a nasıl tanıttığı, FleetMgr'ın aracı nasıl bulduğu, hangi hataların nerede yakalandığı ve statik analize ne kadar uygun oldukları.</p>
+  <div class="meta"><span>Repo:</span> <a href="https://github.com/ahmettsezer/vendor-abstraction-c">ahmettsezer/vendor-abstraction-c</a></div>
+</header>
+
+<nav class="toc" aria-label="İçindekiler">
+  <h2>İçindekiler</h2>
+  <ol>
+    <li><a href="#ortak"><span class="n">1</span>Ortak yapı</a></li>
+    <li><a href="#iki-soru"><span class="n">2</span>Konfigürasyonun iki sorusu</a></li>
+    <li><a href="#ornekler"><span class="n">3</span>Dört konfigürasyon</a>
+      <ol>
+        <li><a href="#fleetConfig"><span class="n">3.1</span>fleetConfig: void* + tip</a></li>
+        <li><a href="#fleetConfigA"><span class="n">3.2</span>fleetConfigA: tipli alanlar</a></li>
+        <li><a href="#fleetConfigB"><span class="n">3.3</span>fleetConfigB: tip başına tablo</a></li>
+        <li><a href="#fleetConfigIndexed"><span class="n">3.4</span>fleetConfigIndexed: ID = index</a></li>
+      </ol>
+    </li>
+    <li><a href="#hatalar"><span class="n">4</span>Hangi hata nerede yakalanıyor</a></li>
+    <li><a href="#sa"><span class="n">5</span>Statik analiz durumu</a></li>
+    <li><a href="#karsilastirma"><span class="n">6</span>Genel karşılaştırma</a></li>
+    <li><a href="#secim"><span class="n">7</span>Değerlendirme ve öneri</a></li>
+  </ol>
+</nav>
+
+<!-- ================================================================== -->
+<section class="sec" id="ortak">
+  <h2 class="sec-title"><span class="n">1</span>Ortak yapı</h2>
+
+  <div class="arch">
+    <div class="box"><b>Entegratör</b><span><code>integrator/</code>: Hangi aracın hangi tipte ve hangi arayüzle yönetileceğini <code>const</code> bir tabloda yazar; <code>FleetMgr_Init(&amp;cfg)</code> çağırır.</span></div>
+    <div class="box"><b>Araçlar</b><span><code>vehicles/</code>: Toyota ve Ford otomobil, MAN ve Volvo tır arayüzünü implement eder. FleetMgr'ı tanımazlar.</span></div>
+    <div class="box mm"><b>FleetMgr</b><span><code>fleetMgr/</code>: Markaları tanımaz. Tabloyu doğrular, araçların init'ini çağırır, işlemleri tipe göre doğru arayüze yönlendirir.</span></div>
+  </div>
+
+  <p>Dört konfigürasyonda da aşağıdakiler aynı:</p>
+  <ul>
+    <li><strong>Arayüzler düz:</strong> Ortak işlemler (<code>init</code>, <code>getInfo</code>, <code>drive</code>, ...) her tipin arayüzünde aynı isim ve imzayla yer alıyor, ardından tipe özel işlemler geliyor.</li>
+  </ul>
+<pre><code>typedef struct {                          typedef struct {
+    FM_Ret_t (*init)(void);                   FM_Ret_t (*init)(void);
+    FM_Ret_t (*getInfo)(VehicleInfo_t *);     FM_Ret_t (*getInfo)(VehicleInfo_t *);
+    FM_Ret_t (*drive)(uint32_t km);           FM_Ret_t (*drive)(uint32_t km);
+    ...                                       ...
+    FM_Ret_t (*setPassengers)(uint8_t);       FM_Ret_t (*loadCargo)(uint32_t kg);
+} CarIfc_t;                               } TruckIfc_t;</code></pre>
+  <ul>
+    <li><strong>Araç tabloları <code>const</code> ve flash'ta;</strong> konfigürasyon <code>FleetMgr_Init(&amp;cfg)</code> ile parametre olarak veriliyor. <code>extern</code> yok; FleetMgr tek başına derlenip link edilebiliyor.</li>
+    <li><strong>Araçların init'ini FleetMgr çağırıyor;</strong> entegratörün <code>main</code>'i markaları tanımıyor. Bir init hata dönerse FleetMgr init edilmemiş kalıyor (ya hep ya hiç).</li>
+    <li><strong>Araçlar FleetMgr.h'i görmüyor;</strong> sadece <code>VehicleIfc.h</code>'i görüyor. Bir araçtan FleetMgr'a geri çağrı yapılamadığı için özyineleme (MISRA 17.2) yapısal olarak imkânsız.</li>
+    <li><strong>Tip koruması:</strong> Otomobile yük yüklemek ya da tıra yolcu bindirmek araca ulaşmadan <code>FM_ERR_WRONG_TYPE</code> ile reddediliyor.</li>
+  </ul>
+
+  <div class="note"><span class="lbl">Fonksiyon seti</span><p><code>fleetConfig</code> ve <code>fleetConfigIndexed</code> tam fonksiyon setini içeriyor (20 API fonksiyonu: filo özeti, görev atama, bakım raporu gibi). <code>fleetConfigA</code> ve <code>fleetConfigB</code> review kolaylığı için sade tutuldu (9 API fonksiyonu: <code>init</code>, <code>getInfo</code>, <code>drive</code>, <code>setPassengers</code>, <code>loadCargo</code>). Satır sayısı karşılaştırmaları bu yüzden çiftler kendi içinde anlamlı: fleetConfig ile Indexed, A ile B.</p></div>
+</section>
+
+<!-- ================================================================== -->
+<section class="sec" id="iki-soru">
+  <h2 class="sec-title"><span class="n">2</span>Konfigürasyonun iki sorusu</h2>
+  <p>Dört konfigürasyon, FleetMgr'ın her çağrıda cevaplaması gereken iki soruya farklı cevaplar veriyor:</p>
+<pre><code>FleetMgr_Car_SetPassengers(id, 4)
+  Soru 1: Bu ID hangi araç?            → ID ile arama mı, doğrudan index mi?
+  Soru 2: Bu aracın otomobil arayüzü?  → void* + cast mı, tipli alan mı, tipli tablo mu?</code></pre>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>Soru 1: ID → araç</th><th>Soru 2: araç → arayüz</th></tr></thead>
+    <tbody>
+      <tr><td><strong>fleetConfig</strong></td><td>Tabloda arama</td><td><code>void*</code> + tipe göre cast</td></tr>
+      <tr><td><strong>fleetConfigA</strong></td><td>Tabloda arama</td><td>Tipli alan (<code>pCar</code> / <code>pTruck</code>)</td></tr>
+      <tr><td><strong>fleetConfigB</strong></td><td>Tipin tablosunda arama</td><td>Tipli tablo (tip alanı yok)</td></tr>
+      <tr><td><strong>fleetConfigIndexed</strong></td><td class="y">Doğrudan index</td><td><code>void*</code> + tipe göre cast</td></tr>
+    </tbody>
+  </table></div>
+  <p>İki soru birbirinden bağımsız. Örneğin "doğrudan index" fikri A ile de birleştirilebilir (bkz. <a href="#secim">7</a>).</p>
+</section>
+
+<!-- ================================================================== -->
+<section class="sec" id="ornekler">
+  <h2 class="sec-title"><span class="n">3</span>Dört konfigürasyon</h2>
+
+  <!-- ---------------- fleetConfig ---------------- -->
+  <article class="variant" id="fleetConfig">
+    <div class="v-head"><h3>fleetConfig: void* + tip etiketi</h3><span class="folder">fleetConfig/</span></div>
+    <p class="idea">Her satırda tek bir tipsiz pointer var. FleetMgr önce <code>type</code>'a bakıyor, sonra pointer'ı ilgili arayüz tipine cast ediyor.</p>
+
+    <h4>Entegratör</h4>
+<pre><code>static const FleetMgr_VehicleCfg_t s_fleet[] = {
+    /* id                         type                arac             */
+    { VEHICLE_ID_TOYOTA_COROLLA, VEHICLE_TYPE_CAR,   &amp;Toyota_CarIfc  },
+    { VEHICLE_ID_FORD_TOURNEO,   VEHICLE_TYPE_CAR,   &amp;Ford_CarIfc    },
+    { VEHICLE_ID_MAN_TGX,        VEHICLE_TYPE_TRUCK, &amp;Man_TruckIfc   },
+    { VEHICLE_ID_VOLVO_FH,       VEHICLE_TYPE_TRUCK, &amp;Volvo_TruckIfc },
+};</code></pre>
+    <h4>FleetMgr</h4>
+<pre><code>ret = getVehicle(id, &amp;pV);                        /* tabloda ID aramasi */
+switch (pV-&gt;type) {
+    case VEHICLE_TYPE_CAR: {
+        const CarIfc_t *pCar = (const CarIfc_t *)pV-&gt;pVehicle;   /* cast */
+        ret = pCar-&gt;drive(km);
+        break;
+    }
+    ...
+}</code></pre>
+
+    <div class="pc">
+      <div class="plus"><h5>Artıları</h5><ul>
+        <li>Tek satır, tek pointer: her tip için ayrı alan ya da tablo gerekmiyor.</li>
+        <li>Yeni bir tip eklemek satır yapısını değiştirmiyor.</li>
+        <li>Bütün filo tek bir listede görünüyor.</li>
+      </ul></div>
+      <div class="minus"><h5>Eksileri</h5><ul>
+        <li><code>void*</code> her pointer'ı kabul ediyor: Tip CAR yazılıp tır arayüzü verilirse <strong>derleyici de Init de yakalamıyor</strong>; çalışma zamanında tanımsız davranış.</li>
+        <li>23 cast: MISRA 11.5 sapması bir kodlama kalıbı olarak belgelenmeli.</li>
+        <li>Tip bilgisi iki yerde: <code>type</code> alanında ve pointer'ın gerçekte gösterdiği nesnede. Tutarlılık sadece entegratöre kalıyor.</li>
+        <li>ID ile arama döngüsü var.</li>
+      </ul></div>
+    </div>
+    <div class="sa"><span class="grade g-bad">Statik analiz: araca bağlı</span>
+      <p>Araç, CAR dalında <code>pVehicle</code>'ın sadece otomobil tabloları olduğunu bilebilmek için <strong>aynı satırdaki <code>type</code> ile <code>pVehicle</code> arasındaki bağı</strong> takip etmek zorunda. Diziyi eleman eleman tutarsa sonuç kesin olur. Özetlerse (array smashing), "CAR dalında tır tablosu da olabilir" der ve uyumsuz tipte erişim ya da uyumsuz imzalı çağrı gibi gerçekte olmayan uyarılar üretir.</p>
+    </div>
+  </article>
+
+  <!-- ---------------- fleetConfigA ---------------- -->
+  <article class="variant" id="fleetConfigA">
+    <div class="v-head"><h3>fleetConfigA: tipli alanlar</h3><span class="folder">fleetConfigA/</span></div>
+    <p class="idea">Her satırda her tip için ayrı, tipli bir alan var; araca uymayan alan <code>NULL</code> kalıyor.</p>
+
+    <h4>Entegratör</h4>
+<pre><code>static const FleetMgr_VehicleCfg_t s_fleet[] = {
+    /* id                         type                otomobil         tir             */
+    { VEHICLE_ID_TOYOTA_COROLLA, VEHICLE_TYPE_CAR,   &amp;Toyota_CarIfc,  NULL            },
+    { VEHICLE_ID_FORD_TOURNEO,   VEHICLE_TYPE_CAR,   &amp;Ford_CarIfc,    NULL            },
+    { VEHICLE_ID_MAN_TGX,        VEHICLE_TYPE_TRUCK, NULL,            &amp;Man_TruckIfc   },
+    { VEHICLE_ID_VOLVO_FH,       VEHICLE_TYPE_TRUCK, NULL,            &amp;Volvo_TruckIfc },
+};</code></pre>
+    <h4>FleetMgr</h4>
+<pre><code>ret = getVehicle(id, &amp;pV);                  /* tabloda ID aramasi */
+ret = carOf(pV)-&gt;setPassengers(count);      /* tip uymazsa guvenli varsayilan */
+
+static const CarIfc_t *carOf(const FleetMgr_VehicleCfg_t *pV) {
+    const CarIfc_t *pCar = &amp;s_noCar;        /* her islemi FM_ERR_WRONG_TYPE */
+    if ((pV-&gt;type == VEHICLE_TYPE_CAR) &amp;&amp; (pV-&gt;pCar != NULL)) { pCar = pV-&gt;pCar; }
+    return pCar;
+}</code></pre>
+
+    <div class="pc">
+      <div class="plus"><h5>Artıları</h5><ul>
+        <li>Otomobil alanına tır arayüzü yazmak <strong>derleyici uyarısı</strong> veriyor.</li>
+        <li>Tip ile dolu alanın uyumsuzluğunu Init yakalıyor.</li>
+        <li>Cast yok, <code>void*</code> yok, MISRA 11.5 sapması yok.</li>
+        <li>Güvenli varsayılan (<code>s_noCar</code>): Çağrı anında NULL ya da tip kontrolü gerekmiyor.</li>
+        <li>Bütün filo tek bir listede görünüyor.</li>
+      </ul></div>
+      <div class="minus"><h5>Eksileri</h5><ul>
+        <li>Her satırda bir NULL alan var; her yeni tip satıra bir alan daha ekliyor.</li>
+        <li>Tip bilgisi yine iki yerde (<code>type</code> ve dolu alan); Init'in tutarlılığı kontrol etmesi gerekiyor.</li>
+        <li>ID ile arama döngüsü var.</li>
+      </ul></div>
+    </div>
+    <div class="sa"><span class="grade g-ok">Statik analiz: iyi</span>
+      <p><code>pCar</code> alanına C'nin tip sistemi gereği sadece otomobil arayüzü konabiliyor. Araç diziyi özetlese bile <code>pCar ∈ {Toyota, Ford, NULL}</code> sonucuna varıyor; tip karışıklığı ihtimali hiç oluşmuyor.</p>
+    </div>
+  </article>
+
+  <!-- ---------------- fleetConfigB ---------------- -->
+  <article class="variant" id="fleetConfigB">
+    <div class="v-head"><h3>fleetConfigB: her tip için ayrı tablo</h3><span class="folder">fleetConfigB/</span></div>
+    <p class="idea">Otomobiller bir tabloda, tırlar bir tabloda. Tip alanı yok: Aracın tipi, hangi tabloda olduğundan anlaşılıyor.</p>
+
+    <h4>Entegratör</h4>
+<pre><code>static const FleetMgr_CarCfg_t s_cars[] = {
+    { VEHICLE_ID_TOYOTA_COROLLA, &amp;Toyota_CarIfc },
+    { VEHICLE_ID_FORD_TOURNEO,   &amp;Ford_CarIfc   },
+};
+static const FleetMgr_TruckCfg_t s_trucks[] = {
+    { VEHICLE_ID_MAN_TGX,  &amp;Man_TruckIfc   },
+    { VEHICLE_ID_VOLVO_FH, &amp;Volvo_TruckIfc },
+};</code></pre>
+    <h4>FleetMgr</h4>
+<pre><code>pCar = findCar(s_pCfg, id);                        /* sadece otomobil tablosu */
+if (pCar != NULL)                       { ret = pCar-&gt;setPassengers(count); }
+else if (findTruck(s_pCfg, id) != NULL) { ret = FM_ERR_WRONG_TYPE; }
+else                                    { ret = FM_ERR_NOT_FOUND; }</code></pre>
+
+    <div class="pc">
+      <div class="plus"><h5>Artıları</h5><ul>
+        <li>Tip ile arayüz uyumsuzluğu <strong>yazılamıyor</strong>; otomobil tablosuna tır arayüzü yazmak derleyici uyarısı veriyor.</li>
+        <li>Tip alanı yok, NULL alan yok: Entegratörün tablosu en sade hal.</li>
+        <li>Tipe özel işlemde sadece o tipin tablosu aranıyor; tip <code>switch</code>'i yok.</li>
+        <li>Cast yok, MISRA 11.5 sapması yok.</li>
+      </ul></div>
+      <div class="minus"><h5>Eksileri</h5><ul>
+        <li>Ortak işlemlerde (<code>drive</code>, <code>getInfo</code>) iki tabloda arama yapılıyor.</li>
+        <li>Bütün filoyu dolaşmak için iki tablonun birleştirilmesi gerekiyor (<code>idAt</code>).</li>
+        <li>ID tekilliğini Init iki tablo arasında da kontrol etmek zorunda.</li>
+        <li>Yeni bir tip: yeni tablo, konfigürasyona iki alan ve yeni bir arama fonksiyonu.</li>
+      </ul></div>
+    </div>
+    <div class="sa"><span class="grade g-ok">Statik analiz: iyi</span>
+      <p>Her tablo tipli; <code>s_cars</code> içinde sadece otomobil arayüzü olabilir. Tip bilgisi tek bir yerde (aracın hangi tabloda olduğunda) tutulduğu için tutarsızlık analizi gerekmiyor.</p>
+    </div>
+  </article>
+
+  <!-- ---------------- fleetConfigIndexed ---------------- -->
+  <article class="variant" id="fleetConfigIndexed">
+    <div class="v-head"><h3>fleetConfigIndexed: ID = tablo index'i</h3><span class="folder">fleetConfigIndexed/</span></div>
+    <p class="idea">fleetConfig'in kendisi (aynı <code>void*</code>, aynı fonksiyonlar); tek fark, FleetMgr ID'yi aramıyor. ID'ler ardışık bir enum ve tablo bu enum ile index'leniyor.</p>
+
+    <h4>Entegratör</h4>
+<pre><code>typedef enum {
+    NO_VEHICLE_ID = VEHICLE_ID_NONE,   /* 0: "arac yok" (defansif) */
+    VEHICLE_ID_TOYOTA_COROLLA,         /* 1 */
+    VEHICLE_ID_FORD_TOURNEO,           /* 2 */
+    VEHICLE_ID_MAN_TGX,                /* 3 */
+    VEHICLE_ID_VOLVO_FH,               /* 4 */
+    VEHICLE_ID_COUNT
+} FleetVehicleId_t;
+
+static const FleetMgr_VehicleCfg_t s_fleet[VEHICLE_ID_COUNT] = {
+    [NO_VEHICLE_ID]             = { VEHICLE_TYPE_NONE,  NULL           },
+    [VEHICLE_ID_TOYOTA_COROLLA] = { VEHICLE_TYPE_CAR,   &amp;Toyota_CarIfc },
+    [VEHICLE_ID_MAN_TGX]        = { VEHICLE_TYPE_TRUCK, &amp;Man_TruckIfc  },
+    ...
+};</code></pre>
+    <h4>FleetMgr</h4>
+<pre><code>if ((id == VEHICLE_ID_NONE) || (id &gt;= s_pCfg-&gt;vehicleCount)) { ret = FM_ERR_NOT_FOUND; }
+else                                                         { *ppV = &amp;s_pCfg-&gt;pVehicles[id]; }</code></pre>
+
+    <div class="pc">
+      <div class="plus"><h5>Artıları</h5><ul>
+        <li><strong>Arama döngüsü yok:</strong> Tek bir sınır kontrolü, sabit sürede erişim.</li>
+        <li><strong>Defansif 0. satır:</strong> Sıfır kalmış bir ID ilk gerçek aracı seçmiyor; <code>NOT_FOUND</code> dönüyor.</li>
+        <li>Satırda <code>id</code> alanı yok; aynı ID iki kez yazılamıyor.</li>
+        <li>Unutulan bir satır sıfırla doluyor (<code>VEHICLE_TYPE_NONE</code>) ve Init reddediyor.</li>
+      </ul></div>
+      <div class="minus"><h5>Eksileri</h5><ul>
+        <li><code>void*</code> kaynaklı bütün zayıflıklar fleetConfig ile aynı: Tip uyumsuzluğu yakalanmıyor, 23 cast var.</li>
+        <li>ID'ler ardışık ve konumsal. 101 gibi dış numaralar gerekiyorsa veri olarak tutulup girişte bir kez ID'ye çevrilmeli.</li>
+        <li>Araç ekleyip çıkarmak ID değerlerini kaydırabilir; değer bir yere kalıcı yazılıyorsa (log, mesaj) dikkat gerekir.</li>
+        <li>Entegratörün enum'u FleetMgr'a <code>uint8_t</code> olarak geçiyor: MISRA 10.3 için sapma kaydı gerekebilir.</li>
+      </ul></div>
+    </div>
+    <div class="sa"><span class="grade g-bad">Statik analiz: erişim iyi, tip güvenliği araca bağlı</span>
+      <p>Erişim tarafı en iyi durumda: <code>id &lt; count</code> kontrolünden sonra <code>tablo[id]</code> erişiminin sınır içinde olduğunu kanıtlamak için tek bir karşılaştırma yeterli; arama döngüsü ve "bulunamadı" dalı yok. Arayüz tarafı ise fleetConfig ile aynı: <code>void*</code> yüzünden tip ile pointer arasındaki bağ aracın hassasiyetine kalıyor.</p>
+    </div>
+  </article>
+</section>
+
+<!-- ================================================================== -->
+<section class="sec" id="hatalar">
+  <h2 class="sec-title"><span class="n">4</span>Hangi hata nerede yakalanıyor</h2>
+  <p>Her konfigürasyon için hatalı tablolar yazılıp derlendi ve Init'e verildi. Sonuçlar:</p>
+  <div class="tbl wide"><table>
+    <thead><tr><th>Entegratörün hatası</th><th>fleetConfig</th><th>A</th><th>B</th><th>Indexed</th></tr></thead>
+    <tbody>
+      <tr><td>Otomobil yerine tır arayüzü</td><td class="n">Yakalanmıyor</td><td class="y">Derleyici</td><td class="y">Derleyici</td><td class="n">Yakalanmıyor</td></tr>
+      <tr><td>Tip ile dolu alan uyumsuz</td><td>—</td><td class="y">Init</td><td class="y">Yazılamaz</td><td>—</td></tr>
+      <tr><td>Arayüz NULL / fonksiyonu eksik</td><td class="y">Init</td><td class="y">Init</td><td class="y">Init</td><td class="y">Init</td></tr>
+      <tr><td>Aynı ID iki kez</td><td class="y">Init</td><td class="y">Init</td><td class="y">Init (iki tablo arasında)</td><td class="y">Yazılamaz</td></tr>
+      <tr><td>Aynı arayüz iki satırda</td><td class="y">Init</td><td class="y">Init</td><td class="y">Init</td><td class="y">Init</td></tr>
+      <tr><td>Bir aracın satırı unutulmuş</td><td class="m">Fark edilmez</td><td class="m">Fark edilmez</td><td class="m">Fark edilmez</td><td class="y">Init (sıfırla dolu satır)</td></tr>
+      <tr><td>Sıfır kalmış ID ile çağrı</td><td class="m">ID 0 tabloda yoksa NOT_FOUND</td><td class="m">Aynı</td><td class="m">Aynı</td><td class="y">NOT_FOUND (0. satır)</td></tr>
+      <tr><td>Doğru tipte ama yanlış araç</td><td class="n">Hiçbiri yakalayamaz</td><td class="n">Hiçbiri</td><td class="n">Hiçbiri</td><td class="n">Hiçbiri</td></tr>
+    </tbody>
+  </table></div>
+  <p>Son satır her tasarımda var: Toyota yerine Ford yazmak tip açısından doğru, iş açısından yanlış bir seçim. Bunu ancak review ya da test yakalar.</p>
+</section>
+
+<!-- ================================================================== -->
+<section class="sec" id="sa">
+  <h2 class="sec-title"><span class="n">5</span>Statik analiz durumu</h2>
+  <div class="tbl wide"><table>
+    <thead><tr><th>Kriter</th><th>fleetConfig</th><th>A</th><th>B</th><th>Indexed</th></tr></thead>
+    <tbody>
+      <tr><td>ID ile arayüz eşleşmesi derleme anında belli</td><td class="y">Evet</td><td class="y">Evet</td><td class="y">Evet</td><td class="y">Evet</td></tr>
+      <tr><td>Tablolar <code>const</code>, flash'ta</td><td class="y">Evet</td><td class="y">Evet</td><td class="y">Evet</td><td class="y">Evet</td></tr>
+      <tr><td>Dizi özetlense de çağrı hedefleri tip doğru</td><td class="n">Araca bağlı</td><td class="y">Evet</td><td class="y">Evet</td><td class="n">Araca bağlı</td></tr>
+      <tr><td><code>void*</code> → arayüz cast'i (MISRA 11.5)</td><td class="n">23</td><td class="y">0</td><td class="y">0</td><td class="n">23</td></tr>
+      <tr><td>ID erişimi</td><td class="m">Arama döngüsü</td><td class="m">Arama döngüsü</td><td class="m">Tipin tablosunda arama</td><td class="y">Tek sınır kontrolü</td></tr>
+      <tr><td>Çağrı anında NULL kontrolü</td><td>Init'e dayanıyor</td><td class="y">Gerekmez (güvenli varsayılan)</td><td>Bulunamadıysa NULL dalı</td><td>Init'e dayanıyor</td></tr>
+      <tr><td>Özyineleme riski (17.2)</td><td class="y">Yok</td><td class="y">Yok</td><td class="y">Yok</td><td class="y">Yok</td></tr>
+      <tr><td>Kullanımdan önce init garantisi</td><td class="y">Var</td><td class="y">Var</td><td class="y">Var</td><td class="y">Var</td></tr>
+      <tr><td>Ek MISRA notu</td><td>11.5 kalıbı</td><td>—</td><td>—</td><td>11.5 kalıbı + 10.3 (enum → uint8_t)</td></tr>
+    </tbody>
+  </table></div>
+  <p>MISRA 15.5 (tek çıkış), 16.3 (break) ve 13.5 (<code>&amp;&amp;</code> ve <code>||</code> sağ tarafında yan etkili çağrı olmaması) dört örnekte de uygulandı. Demolardaki <code>printf</code> kullanımı Rule 21.6'ya karşı bilinçli bir sapma.</p>
+
+  <h3>Bir analiz aracı hangi sonucu üretir?</h3>
+<pre><code>FleetMgr_Drive(VEHICLE_ID_TOYOTA_COROLLA, 300)
+                    │
+   fleetConfig      │  arama → satır → CAR dalı → (CarIfc_t*)pVehicle → drive
+                    │  eleman eleman takip: toyota_drive        özet: toyota/ford/man/volvo_drive (?)
+   A                │  arama → satır → carOf → pCar → drive
+                    │  her durumda: {toyota_drive, ford_drive} (+ guvenli varsayilan)
+   B                │  findCar → pIfc → drive
+                    │  her durumda: {toyota_drive, ford_drive}
+   Indexed          │  tablo[1] → CAR dalı → (CarIfc_t*)pVehicle → drive
+                    │  erişim kesin; hedef fleetConfig ile aynı (araca bağlı)</code></pre>
+</section>
+
+<!-- ================================================================== -->
+<section class="sec" id="karsilastirma">
+  <h2 class="sec-title"><span class="n">6</span>Genel karşılaştırma</h2>
+  <div class="tbl wide"><table>
+    <thead><tr><th></th><th>fleetConfig</th><th>A</th><th>B</th><th>Indexed</th></tr></thead>
+    <tbody>
+      <tr><td>Entegratör için okunabilirlik</td><td>İyi</td><td>İyi (NULL sütunları)</td><td class="y">En iyi</td><td>İyi (enum + tablo)</td></tr>
+      <tr><td>Satır yapısı</td><td><code>{id, type, void*}</code></td><td><code>{id, type, pCar, pTruck}</code></td><td><code>{id, &amp;ifc}</code> × 2 tablo</td><td><code>[id] = {type, void*}</code></td></tr>
+      <tr><td>Tip bilgisi kaç yerde</td><td class="m">2 (type + nesne)</td><td class="m">2 (type + dolu alan)</td><td class="y">1 (tablo)</td><td class="m">2 (type + nesne)</td></tr>
+      <tr><td>Yeni araç eklemek</td><td>1 satır</td><td>1 satır</td><td>Tipin tablosuna 1 satır</td><td>Enum'a 1 isim + 1 satır</td></tr>
+      <tr><td>Yeni tip eklemek</td><td>Enum + switch case'leri</td><td>Satıra alan + switch case'leri</td><td>Yeni tablo + arama fonksiyonu</td><td>Enum + switch case'leri</td></tr>
+      <tr><td>Bütün filoyu dolaşmak</td><td>Tek döngü</td><td>Tek döngü</td><td class="m">İki tablo birleşik</td><td>Tek döngü (1'den)</td></tr>
+      <tr><td>Dış ID'ler (101, 201)</td><td class="y">Doğrudan</td><td class="y">Doğrudan</td><td class="y">Doğrudan</td><td class="m">Girişte çevrilmeli</td></tr>
+      <tr><td>FleetMgr.c kod satırı*</td><td>593</td><td>237</td><td>273</td><td>589</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small">* Boş ve yorum satırları hariç. fleetConfig ve Indexed tam fonksiyon setini, A ve B sade seti içeriyor; satır sayıları sadece çiftler kendi içinde karşılaştırılabilir.</p>
+</section>
+
+<!-- ================================================================== -->
+<section class="sec" id="secim">
+  <h2 class="sec-title"><span class="n">7</span>Değerlendirme ve öneri</h2>
+  <div class="pick">
+    <div><b>fleetConfig</b><span>Tek satır ve tek pointer sadeliği önemliyse. Bedeli tip güvenliğinin ve analiz kesinliğinin entegratöre ve araca kalması. Seçilecekse en azından tip denetleyen bir makro (<code>FLEET_CAR(id, &amp;ifc)</code>) ya da Init'te arayüzün kendi tipini kontrol etme eklenmeli.</span></div>
+    <div><b>A</b><span>Bütün filonun tek bir listede görünmesi önemliyse ve tip güvenliği isteniyorsa. Cast yok, derleyici ve Init birlikte koruyor.</span></div>
+    <div><b>B</b><span>En sade entegratör tablosu ve "tip uyumsuzluğu yazılamaz" garantisi isteniyorsa. Bedeli, ortak işlemlerde iki tablo araması.</span></div>
+    <div><b>Indexed</b><span>Aramasız, sabit sürede erişim ve defansif 0. satır isteniyorsa. Şu anki haliyle <code>void*</code> zayıflığını taşıyor.</span></div>
+  </div>
+
+  <div class="note"><span class="lbl">Önerilen birleşim</span><p>Bu dört örneğin iki iyi tarafı birleştirilebilir: <strong>A'nın tipli alanları</strong> (soru 2'ye tip güvenli cevap) ile <strong>Indexed'in doğrudan erişimi</strong> (soru 1'e aramasız cevap). Sonuç: <code>s_fleet[VEHICLE_ID_COUNT] = { [ID] = { type, pCar, pTruck } }</code>. Cast yok, arama yok, tip uyumsuzluğunu derleyici ve Init yakalıyor, unutulan satırı Init yakalıyor, 0. satır defansif. Bu birleşim daha önce denendi ve çalıştı; Indexed örneği, fleetConfig'in ID dışında değişmemesi istendiği için <code>void*</code> tabanına alındı.</p></div>
+
+  <div class="note warn"><span class="lbl">Neden fleetIndexConfig kaldırıldı</span><p>Satır, index ve tipli tablolar kullanan bir ara versiyon (payload taslağından esinlenerek) denendi ve kaldırıldı. Payload'da index'in bir amacı vardı: İstasyonun yük tipi çalışma zamanında değişiyordu. Filoda ise araç ile arayüz eşleşmesi derleme anında sabit; o index katmanı ek bir yönlendirme getiriyor ama karşılığında bir şey kazandırmıyordu. Ayrıca "yanlış index" diye yeni bir hata türü ekliyordu.</p></div>
+</section>
+
+<footer>
+  <p>Kod örnekleri repodaki klasörlerin kısaltılmış halleridir. Sayılar ve test sonuçları repodaki kod üzerinde ölçülmüştür. <a class="top" href="#bas">↑ Başa dön</a></p>
+</footer>
+
+</div>
+
+</body>
+</html>

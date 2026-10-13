@@ -137,8 +137,13 @@ sapmasidir.
 
 ## Dokuman
 
-Orneklerin yapisi, kullanimi, artilari, eksileri ve statik analiz degerlendirmesi:
-[`docs/mimari-notlari.html`](docs/mimari-notlari.html) (tarayicida acin; telefona uygun).
+- [`docs/fleet-konfigurasyonlari.html`](docs/fleet-konfigurasyonlari.html): fleetConfig, fleetConfigA,
+  fleetConfigB ve fleetConfigIndexed karsilastirmasi; hangi hatanin nerede yakalandigi, statik
+  analiz durumu ve oneri.
+- [`docs/mimari-notlari.html`](docs/mimari-notlari.html): ilk orneklerin (runtime kayit, constConfig,
+  switchDispatch) karsilastirmasi. Not: runtime kayit ornekleri repodan kaldirildi.
+
+Tarayicida acin; telefona uygundur.
 
 ## Derleme ve calistirma
 
