@@ -177,7 +177,8 @@ footer { border-top: 1px solid var(--line); padding-top: 16px; color: var(--mute
     <li><a href="#hatalar"><span class="n">4</span>Hangi hata nerede yakalanıyor</a></li>
     <li><a href="#sa"><span class="n">5</span>Statik analiz durumu</a></li>
     <li><a href="#karsilastirma"><span class="n">6</span>Genel karşılaştırma</a></li>
-    <li><a href="#secim"><span class="n">7</span>Değerlendirme ve öneri</a></li>
+    <li><a href="#buyume"><span class="n">7</span>Büyüyen sistem: çok tip, çok işlem</a></li>
+    <li><a href="#secim"><span class="n">8</span>Değerlendirme ve öneri</a></li>
   </ol>
 </nav>
 
@@ -228,7 +229,7 @@ footer { border-top: 1px solid var(--line); padding-top: 16px; color: var(--mute
       <tr><td><strong>fleetConfigIndexed</strong></td><td class="y">Doğrudan index</td><td><code>void*</code> + tipe göre cast</td></tr>
     </tbody>
   </table></div>
-  <p>İki soru birbirinden bağımsız. Örneğin "doğrudan index" fikri A ile de birleştirilebilir (bkz. <a href="#secim">7</a>).</p>
+  <p>İki soru birbirinden bağımsız. Örneğin "doğrudan index" fikri A ile de birleştirilebilir (bkz. <a href="#secim">8</a>).</p>
 </section>
 
 <!-- ================================================================== -->
@@ -475,16 +476,93 @@ else                                                         { *ppV = &amp;s_pCf
 </section>
 
 <!-- ================================================================== -->
+<section class="sec" id="buyume">
+  <h2 class="sec-title"><span class="n">7</span>Büyüyen sistem: çok tip, çok işlem</h2>
+  <p>Örnekler review kolay olsun diye iki tip ve birkaç işlemle yazıldı. Gerçek sistemde ise:</p>
+  <ul>
+    <li>Tip sayısı artacak: otomobil, tır, motosiklet, otobüs ...</li>
+    <li>Arayüz fonksiyonları çok daha fazla olacak ve artacak.</li>
+    <li>Çağrılar her zaman <strong>tablo ve fonksiyon pointer'ı</strong> üzerinden yapılacak; switchDispatch gibi doğrudan çağrı istenmiyor.</li>
+  </ul>
+
+  <div class="note"><span class="lbl">Bu yapılar switchDispatch değil</span><p>switchDispatch'te <code>switch</code> <strong>araç başına</strong> yapılıyor ve her <code>case</code> doğrudan bir fonksiyonu çağırıyordu; her yeni araç kod değişikliği demekti. Dört fleet tasarımında dallanma <strong>tip başına</strong> yapılıyor ve çağrı her zaman tablodaki fonksiyon pointer'ından gidiyor. Yeni bir araç eklemek sadece tabloya bir satır demek; FleetMgr'ın kodu değişmiyor.</p></div>
+
+  <h3>Asıl maliyet: ortak işlemler × tipler</h3>
+  <p>Arayüzler düz olduğu için (ortak işlemler ayrı bir yapıda değil, her tipin kendi arayüzünde) <code>drive</code> her tipte farklı bir yapının alanı. FleetMgr ortak bir işlemi çağırmak için aracın tipine göre dallanmak zorunda:</p>
+<pre><code>static FM_Ret_t vehicleDrive(pV, km) {
+    switch (pV-&gt;type) {
+        case VEHICLE_TYPE_CAR:   ... -&gt;drive(km); break;
+        case VEHICLE_TYPE_TRUCK: ... -&gt;drive(km); break;
+        case VEHICLE_TYPE_MOTO:  ... -&gt;drive(km); break;   /* her yeni tip: her yardimciya bir case */
+        ...
+    }
+}</code></pre>
+  <p>T tip ve Fc ortak işlemle FleetMgr'da yaklaşık <strong>T × Fc</strong> dal oluşur. Bu maliyet dört tasarımda da aynı. Onları ayıran şey <strong>dalların içinde ne olduğu</strong>:</p>
+
+  <div class="tbl wide"><table>
+    <thead><tr><th>Tip ve işlem arttıkça</th><th>fleetConfig / Indexed (<code>void*</code>)</th><th>A (tipli alanlar)</th><th>B (tip başına tablo)</th></tr></thead>
+    <tbody>
+      <tr><td>Her dalın içinde</td><td class="n">Cast</td><td class="y">Tipli alan erişimi</td><td class="m">Tipin tablosunda arama</td></tr>
+      <tr><td>Cast sayısı (MISRA 11.5)</td><td class="n">≈ (Fc + Ft) × T; 6 tip ve 25 işlemle yüzlerce</td><td class="y">0</td><td class="y">0</td></tr>
+      <tr><td>Satır genişliği</td><td class="y">Sabit (1 pointer)</td><td class="m">T pointer; designated initializer ile yazılan tek alan</td><td class="y">Sabit, ama T ayrı tablo</td></tr>
+      <tr><td>Ortak işlem çağrısının maliyeti</td><td>1 arama veya index</td><td>1 arama veya index</td><td class="n">T tabloda sıralı arama</td></tr>
+      <tr><td>Yeni tip eklemek</td><td>Enum, yapı, her yardımcıya cast'li case</td><td>Enum, yapı, satıra bir alan, her yardımcıya case</td><td class="m">Enum, yapı, yeni tablo, find fonksiyonu, her ortak işleme bir dal, 2 config alanı</td></tr>
+      <tr><td>Filoyu dolaşmak, ID tekilliği</td><td class="y">Tek tablo</td><td class="y">Tek tablo</td><td class="n">T tablonun birleşimi</td></tr>
+      <tr><td>Tip uyumsuzluğu</td><td class="n">Yakalanmıyor; tip arttıkça risk artar</td><td class="y">Derleyici + Init</td><td class="y">Yazılamaz</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small">T: tip sayısı, Fc: ortak işlem sayısı, Ft: tip başına tipe özel işlem sayısı.</p>
+
+  <h3>Statik analiz gözüyle büyüme</h3>
+  <ul>
+    <li><strong><code>void*</code> (fleetConfig, Indexed):</strong> Tip sayısı arttıkça analiz aracının "CAR dalında <code>pVehicle</code> neyi gösterebilir?" sorusuna vereceği kaba cevap da büyür; dizi özetlenirse bütün tiplerin bütün tabloları aday olur ve yanlış alarmlar tip sayısıyla artar. Her cast MISRA raporunda ayrı bir bulgudur.</li>
+    <li><strong>A:</strong> <code>pCar</code> alanına sadece otomobil arayüzü girebilir. Tip sayısı ne olursa olsun araç her alanın hedef kümesini doğru çıkarır; büyüme analizi zorlaştırmaz.</li>
+    <li><strong>B:</strong> A ile aynı tip güvenliği; ama ortak işlemlerdeki arama zinciri her tiple uzar. Döngü ve dal sayısı stack ve WCET analizinin işini büyütür.</li>
+    <li><strong>ID erişimi:</strong> Indexed'teki tek sınır kontrolü, araç sayısından bağımsız olarak en kolay kanıtlanan erişim biçimidir.</li>
+  </ul>
+
+  <div class="note warn"><span class="lbl">T × Fc dallanmayı kaldırmanın tek yolu</span><p>Ortak işlemlere tipten bağımsız bir pointer üzerinden ulaşmak; yani ortak işlemleri arayüzün içinde bir <code>common</code> alt yapısında toplamak. Bu yol daha önce denendi ve arayüz okunabilirliği için tercih edilmedi. Karar anlaşılır; burada sadece büyüyen bir sistemdeki maliyeti görünür kılınıyor: düz arayüzlerle her yeni tip, FleetMgr'daki bütün ortak işlem yardımcılarına bir <code>case</code> ekler.</p></div>
+</section>
+
+<!-- ================================================================== -->
 <section class="sec" id="secim">
-  <h2 class="sec-title"><span class="n">7</span>Değerlendirme ve öneri</h2>
-  <div class="pick">
-    <div><b>fleetConfig</b><span>Tek satır ve tek pointer sadeliği önemliyse. Bedeli tip güvenliğinin ve analiz kesinliğinin entegratöre ve araca kalması. Seçilecekse en azından tip denetleyen bir makro (<code>FLEET_CAR(id, &amp;ifc)</code>) ya da Init'te arayüzün kendi tipini kontrol etme eklenmeli.</span></div>
-    <div><b>A</b><span>Bütün filonun tek bir listede görünmesi önemliyse ve tip güvenliği isteniyorsa. Cast yok, derleyici ve Init birlikte koruyor.</span></div>
-    <div><b>B</b><span>En sade entegratör tablosu ve "tip uyumsuzluğu yazılamaz" garantisi isteniyorsa. Bedeli, ortak işlemlerde iki tablo araması.</span></div>
-    <div><b>Indexed</b><span>Aramasız, sabit sürede erişim ve defansif 0. satır isteniyorsa. Şu anki haliyle <code>void*</code> zayıflığını taşıyor.</span></div>
+  <h2 class="sec-title"><span class="n">8</span>Değerlendirme ve öneri</h2>
+
+  <h3>Öneri: A'nın tipli alanları + Indexed'in doğrudan erişimi</h3>
+  <p>Çok tipli, çok işlemli ve fonksiyon pointer'ı zorunlu bir sistem için dört tasarımdan birini olduğu gibi almak yerine iki iyi tarafı birleştirmek öneriliyor:</p>
+<pre><code>/* Entegrator: ID = index; her satirda sadece kendi tipinin alani yazilir */
+static const FleetMgr_VehicleCfg_t s_fleet[VEHICLE_ID_COUNT] = {
+    [NO_VEHICLE_ID]             = { .type = VEHICLE_TYPE_NONE },
+    [VEHICLE_ID_TOYOTA_COROLLA] = { .type = VEHICLE_TYPE_CAR,   .pCar   = &amp;Toyota_CarIfc  },
+    [VEHICLE_ID_MAN_TGX]        = { .type = VEHICLE_TYPE_TRUCK, .pTruck = &amp;Man_TruckIfc   },
+    [VEHICLE_ID_YAMAHA_MT07]    = { .type = VEHICLE_TYPE_MOTO,  .pMoto  = &amp;Yamaha_MotoIfc },
+};
+
+/* Istege bagli: tip ile alanin ayni satirda tutarli yazilmasini garanti eden makro */
+#define FLEET_CAR(pIfc)   { .type = VEHICLE_TYPE_CAR,   .pCar   = (pIfc) }
+#define FLEET_TRUCK(pIfc) { .type = VEHICLE_TYPE_TRUCK, .pTruck = (pIfc) }</code></pre>
+
+  <div class="pc">
+    <div class="plus"><h5>Bu birleşimin getirdikleri</h5><ul>
+      <li><strong>Erişim (Indexed'ten):</strong> Arama yok, tek sınır kontrolü; defansif 0. satır; unutulan satırı Init yakalıyor.</li>
+      <li><strong>Tip güvenliği (A'dan):</strong> Cast yok; <code>.pCar = &amp;Man_TruckIfc</code> derleyici uyarısı; tip ile alan uyumsuzluğunu Init yakalıyor.</li>
+      <li><strong>Satır genişliği sorunu yok:</strong> Designated initializer ile entegratör sadece kendi tipinin alanını yazar; diğerleri otomatik NULL olur.</li>
+      <li><strong>Statik analiz:</strong> Tip sayısı arttıkça kesinlik düşmez, cast bulgusu oluşmaz.</li>
+    </ul></div>
+    <div class="minus"><h5>Bedeli</h5><ul>
+      <li>Flash'ta araç başına T pointer (6 tiple yaklaşık 24 bayt).</li>
+      <li>Yeni tip: satır yapısına bir alan, Init doğrulamasına bir dal ve ortak işlem yardımcılarına birer <code>case</code> (son kalem her tasarımda var).</li>
+      <li>ID'ler ardışık ve konumsal; dış numaralar girişte bir kez ID'ye çevrilmeli.</li>
+    </ul></div>
   </div>
 
-  <div class="note"><span class="lbl">Önerilen birleşim</span><p>Bu dört örneğin iki iyi tarafı birleştirilebilir: <strong>A'nın tipli alanları</strong> (soru 2'ye tip güvenli cevap) ile <strong>Indexed'in doğrudan erişimi</strong> (soru 1'e aramasız cevap). Sonuç: <code>s_fleet[VEHICLE_ID_COUNT] = { [ID] = { type, pCar, pTruck } }</code>. Cast yok, arama yok, tip uyumsuzluğunu derleyici ve Init yakalıyor, unutulan satırı Init yakalıyor, 0. satır defansif. Bu birleşim daha önce denendi ve çalıştı; Indexed örneği, fleetConfig'in ID dışında değişmemesi istendiği için <code>void*</code> tabanına alındı.</p></div>
+  <h3>Neden diğerleri değil</h3>
+  <div class="pick">
+    <div><b>fleetConfig</b><span>Satır sabit kalıyor ama cast sayısı ve tip uyumsuzluğu riski T × F ile büyüyor; ID araması da var. Büyüyen bir sistemde statik analiz için en kötü ölçeklenen seçenek.</span></div>
+    <div><b>Indexed</b><span>Erişim tarafı en iyisi, ama <code>void*</code> yüzünden fleetConfig'in bütün tip güvenliği ve analiz sorunlarını taşıyor. Önerilen birleşim, bu örneğin <code>void*</code>'ının tipli alanlarla değiştirilmiş hali.</span></div>
+    <div><b>A</b><span>Tip güvenliği tam, ama ID araması var. Tek başına seçilecekse designated initializer ile yazılmalı.</span></div>
+    <div><b>B</b><span>Tipe özel işlemler en temiz bu yapıda; ama ortak işlem sayısı fazla ve artacağı için her ortak işlemin T tabloda arama yapması ve T tablonun birleştirilmesi en çok büyüyen maliyet.</span></div>
+  </div>
 
   <div class="note warn"><span class="lbl">Neden fleetIndexConfig kaldırıldı</span><p>Satır, index ve tipli tablolar kullanan bir ara versiyon (payload taslağından esinlenerek) denendi ve kaldırıldı. Payload'da index'in bir amacı vardı: İstasyonun yük tipi çalışma zamanında değişiyordu. Filoda ise araç ile arayüz eşleşmesi derleme anında sabit; o index katmanı ek bir yönlendirme getiriyor ama karşılığında bir şey kazandırmıyordu. Ayrıca "yanlış index" diye yeni bir hata türü ekliyordu.</p></div>
 </section>
