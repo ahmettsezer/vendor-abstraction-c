@@ -1,7 +1,7 @@
 # vendor-abstraction-c
 
 C dilinde, vendor'lardan bagimsiz bir modul yoneticisi (**ModuleMgr**) ve bu yoneticinin
-**dort farkli dagitim (dispatch) ornegi**. Ornekler statik analize uygunluk acisindan
+**dort farkli dagitim (dispatch) ornegi** ile bunlardan birine dayanan gercekci bir filo yonetimi ornegi. Ornekler statik analize uygunluk acisindan
 (MISRA C, call graph, stack analizi, formel kanit) karsilastirilmistir.
 
 ## Mimari
@@ -19,7 +19,7 @@ Ornek vendor'lar ayni arayuzu sunar ama farkli davranir:
 - **VendorA** kendisine yazilan son degeri saklar.
 - **VendorB** kendisine yazilan degerleri toplar.
 
-Dort ornekte de ModuleMgr tek basina derlenip link edilebilir; ornekler arasindaki fark,
+Tum orneklerde ModuleMgr tek basina derlenip link edilebilir; ornekler arasindaki fark,
 ModuleMgr'in bir `VendorId` icin hangi fonksiyonu cagiracagini **nereden ogrendigi**.
 
 ## Ornekler
@@ -48,7 +48,27 @@ ModuleMgr'in bir `VendorId` icin hangi fonksiyonu cagiracagini **nereden ogrendi
   gerekir (pratikte kod uretici ile kullanilir). ModuleMgr, entegratorun tanimladigi
   dagitici fonksiyonlara link seviyesinde baglidir.
 
-`constConfig` ve `switchDispatch` orneklerinde ek olarak su MISRA C:2012 kurallarina
+### fleetConfig: gercek hayata yakin ornek
+
+[`fleetConfig`](fleetConfig/), `constConfig` mimarisini bir filo yonetimi uzerinden gosterir.
+Iki arac tipi vardir ve her tipin kendi arayuzu bulunur:
+
+| Arayuz | Kim implement eder | Islemler |
+|---|---|---|
+| `VehicleCommonIfc_t` | Tum araclar | bilgi (marka, model yili, yakit tipi, km, depo), sur, yakit al, bakim |
+| `CarIfc_t` | Otomobiller (Toyota) | koltuk sayisi, yolcu bindir/indir |
+| `TruckIfc_t` | Tirlar (MAN, Volvo) | yuk kapasitesi, yukle, bosalt |
+
+Entegratorun tablosunda her arac icin `{ id, type, instance, &ortak, &otomobil, &tir }`
+yazilir; araca uymayan tipe ozel arayuz `NULL` birakilir. `instance`, bir markanin filodaki
+birden fazla aracini ayirt eder (iki Toyota gibi). ModuleMgr:
+
+- Init'te tip ile arayuz uyumunu, fonksiyon pointer'larini, instance'i ve tekrarlanan ID'yi dogrular.
+- Tipe uymayan islemi (otomobile yuk) vendor'a gitmeden `MM_ERR_WRONG_TYPE` ile reddeder.
+- Tipe gore yonetir: bakim araligi tipe gore (otomobil 15.000, tir 30.000 km), yolcuya yeten
+  en kucuk otomobili ve yuke yeten en kucuk tiri bulur, tip bazinda filo ozeti cikarir.
+
+`constConfig`, `switchDispatch` ve `fleetConfig` orneklerinde ek olarak su MISRA C:2012 kurallarina
 uyulmustur: 15.5 (tek cikis noktasi), 16.3 (`switch` case'leri `break` ile biter), 17.7 (donus
 degerleri kullanilir veya `(void)` ile yok sayilir). Demo amacli `printf` kullanimi Rule 21.6
 sapmasidir.

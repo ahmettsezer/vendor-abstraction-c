@@ -160,12 +160,51 @@
             "group": "build"
         },
         {
+            "label": "build fleetConfig",
+            "type": "process",
+            "command": "C:/MinGW/bin/gcc.exe",
+            "args": [
+                "-std=c99",
+                "-Wall",
+                "-Wextra",
+                "-Wpedantic",
+                "-O0",
+                "-g3",
+                "-ImoduleMgr",
+                "-Ivendors/toyota",
+                "-Ivendors/man",
+                "-Ivendors/volvo",
+                "-Iintegrator",
+                "moduleMgr/ModuleMgr.c",
+                "vendors/toyota/Toyota.c",
+                "vendors/man/Man.c",
+                "vendors/volvo/Volvo.c",
+                "integrator/Integrator_Cfg.c",
+                "integrator/main.c",
+                "-o",
+                "../build/demo_fleet.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/fleetConfig"
+            },
+            "dependsOn": "mkdir build",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}/fleetConfig"
+                ]
+            },
+            "group": "build"
+        },
+        {
             "label": "build all",
             "dependsOn": [
                 "build runtimeRegister",
                 "build runtimeRegisterConst",
                 "build constConfig",
-                "build switchDispatch"
+                "build switchDispatch",
+                "build fleetConfig"
             ],
             "dependsOrder": "sequence",
             "problemMatcher": [],
