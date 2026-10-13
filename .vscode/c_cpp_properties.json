@@ -77,6 +77,20 @@
                 "${workspaceFolder}/fleetConfigB/vehicles/volvo",
                 "${workspaceFolder}/fleetConfigB/integrator"
             ]
+        },
+        {
+            "name": "fleetConfigIndexed",
+            "compilerPath": "C:/MinGW/bin/gcc.exe",
+            "cStandard": "c99",
+            "intelliSenseMode": "windows-gcc-x86",
+            "includePath": [
+                "${workspaceFolder}/fleetConfigIndexed/fleetMgr",
+                "${workspaceFolder}/fleetConfigIndexed/vehicles/toyota",
+                "${workspaceFolder}/fleetConfigIndexed/vehicles/ford",
+                "${workspaceFolder}/fleetConfigIndexed/vehicles/man",
+                "${workspaceFolder}/fleetConfigIndexed/vehicles/volvo",
+                "${workspaceFolder}/fleetConfigIndexed/integrator"
+            ]
         }
     ],
     "version": 4

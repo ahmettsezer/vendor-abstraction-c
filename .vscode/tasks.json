@@ -246,6 +246,46 @@
             "group": "build"
         },
         {
+            "label": "build fleetConfigIndexed",
+            "type": "process",
+            "command": "C:/MinGW/bin/gcc.exe",
+            "args": [
+                "-std=c99",
+                "-Wall",
+                "-Wextra",
+                "-Wpedantic",
+                "-O0",
+                "-g3",
+                "-IfleetMgr",
+                "-Ivehicles/toyota",
+                "-Ivehicles/ford",
+                "-Ivehicles/man",
+                "-Ivehicles/volvo",
+                "-Iintegrator",
+                "fleetMgr/FleetMgr.c",
+                "vehicles/toyota/Toyota.c",
+                "vehicles/ford/Ford.c",
+                "vehicles/man/Man.c",
+                "vehicles/volvo/Volvo.c",
+                "integrator/Integrator_Cfg.c",
+                "integrator/main.c",
+                "-o",
+                "../build/demo_fleetIndexed.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/fleetConfigIndexed"
+            },
+            "dependsOn": "mkdir build",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}/fleetConfigIndexed"
+                ]
+            },
+            "group": "build"
+        },
+        {
             "label": "build all",
             "dependsOn": [
                 "build constConfig",
@@ -253,7 +293,8 @@
                 "build fleetConfig",
                 "build payloadConfig",
                 "build fleetConfigA",
-                "build fleetConfigB"
+                "build fleetConfigB",
+                "build fleetConfigIndexed"
             ],
             "dependsOrder": "sequence",
             "problemMatcher": [],
