@@ -6,9 +6,12 @@
  *          Tablo 'const' -> flash'ta, degismez. ID, tip ve arayuz eslesmesi
  *          derleme aninda kesin; statik analiz araci satir satir okur.
  *
- *          Her satir: { id, tip, otomobil arayuzu, tir arayuzu }.
- *          Tipe uymayan arayuz NULL birakilir. Bir arayuz tablosu tek bir
- *          araci temsil eder; ayni tablo iki satirda kullanilamaz.
+ *          Her satir: { id, tip, arac arayuzu }.
+ *          DIKKAT: arayuz 'const void*' olarak saklanir; tipin arayuzle
+ *          uyumlu olmasi (CAR -> CarIfc_t, TRUCK -> TruckIfc_t) BU DOSYANIN
+ *          sorumlulugundadir, FleetMgr dogrulayamaz.
+ *          Bir arayuz tablosu tek bir araci temsil eder; ayni tablo iki
+ *          satirda kullanilamaz.
  *
  *          Yeni arac = markanin arayuzu + bu tabloya bir satir + main'de Init.
  */
@@ -21,11 +24,11 @@
 
 static const FleetMgr_VehicleCfg_t s_fleet[] =
 {
-    /* id                        type                otomobil         tir             */
-    { VEHICLE_ID_TOYOTA_COROLLA, VEHICLE_TYPE_CAR,   &Toyota_CarIfc,  NULL            },
-    { VEHICLE_ID_FORD_TOURNEO,   VEHICLE_TYPE_CAR,   &Ford_CarIfc,    NULL            },
-    { VEHICLE_ID_MAN_TGX,        VEHICLE_TYPE_TRUCK, NULL,            &Man_TruckIfc   },
-    { VEHICLE_ID_VOLVO_FH,       VEHICLE_TYPE_TRUCK, NULL,            &Volvo_TruckIfc },
+    /* id                        type                arac (type'a uygun arayuz) */
+    { VEHICLE_ID_TOYOTA_COROLLA, VEHICLE_TYPE_CAR,   &Toyota_CarIfc   },
+    { VEHICLE_ID_FORD_TOURNEO,   VEHICLE_TYPE_CAR,   &Ford_CarIfc     },
+    { VEHICLE_ID_MAN_TGX,        VEHICLE_TYPE_TRUCK, &Man_TruckIfc    },
+    { VEHICLE_ID_VOLVO_FH,       VEHICLE_TYPE_TRUCK, &Volvo_TruckIfc  },
 };
 
 const FleetMgr_Config_t Integrator_FleetCfg =

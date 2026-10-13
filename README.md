@@ -61,12 +61,15 @@ islemler her iki arayuzde de ayni isim ve imzayla, dogrudan alan olarak bulunur:
 | `CarIfc_t` | Toyota Corolla, Ford Tourneo Custom | `init`, `getInfo`, `drive`, `refuel`, `doService` | `getSeatCount`, `setPassengers` |
 | `TruckIfc_t` | MAN TGX, Volvo FH | `init`, `getInfo`, `drive`, `refuel`, `doService` | `getMaxLoadKg`, `getLoadKg`, `loadCargo`, `unloadCargo` |
 
-Entegratorun tablosunda her arac icin `{ id, type, &otomobil, &tir }` yazilir; tipe uymayan
-arayuz `NULL` birakilir. Her arac modulu (`vehicles/` altindaki her marka) tek bir araci temsil eder; bir arayuz tablosu iki
+Entegratorun tablosunda her arac icin `{ id, type, &arayuz }` yazilir. Arayuz
+`const void *pVehicle` olarak saklanir; FleetMgr `type`'a bakip `asCar()` / `asTruck()` ile
+ilgili arayuz tipine cast eder (MISRA 11.5 sapmasi, sadece bu iki fonksiyonda). `type` ile
+arayuzun uyumunu **entegrator** garanti etmelidir: `void*` tip bilgisi tasimadigi icin
+FleetMgr bu uyumu dogrulayamaz. Her arac modulu (`vehicles/` altindaki her marka) tek bir araci temsil eder; bir arayuz tablosu iki
 satirda kullanilamaz. FleetMgr:
 
-- Init'te tip ile arayuz uyumunu, tum fonksiyon pointer'larini, tekrarlanan ID'yi ve ayni
-  arayuzun iki kez verilmesini dogrular; ardindan her aracin `init`'ini **kendisi** cagirir.
+- Init'te tipe gore tum fonksiyon pointer'larini, NULL arayuzu, tekrarlanan ID'yi ve ayni
+  arayuzun iki kez verilmesini dogrular (tip ile arayuz uyumunu dogrulayamaz); ardindan her aracin `init`'ini **kendisi** cagirir.
   Bir arac init'i hata donerse FleetMgr init edilmemis kalir (ya hep ya hic).
 - Entegratorun `main`'i markalari tanimaz; sadece `FleetMgr_Init(&cfg)` cagirir. Markalari
   bilen tek dosya konfigurasyon tablosudur (`Integrator_Cfg.c`).

@@ -20,17 +20,19 @@
 
 /* ---- Konfigurasyon tipleri (FleetMgr tanimlar, entegrator doldurur) --- */
 
-/* Filodaki bir arac. 'type' hangi arayuzun kullanilacagini belirler;
- * tipe uymayan arayuz pointer'i NULL olmali:
- *   VEHICLE_TYPE_CAR   -> pCar dolu,   pTruck NULL
- *   VEHICLE_TYPE_TRUCK -> pTruck dolu, pCar NULL
- * Ortak islemler (bilgi, sur, yakit, bakim) her iki arayuzde de vardir.  */
+/* Filodaki bir arac. 'pVehicle', 'type'a gore su arayuzu gosterir:
+ *   VEHICLE_TYPE_CAR   -> const CarIfc_t
+ *   VEHICLE_TYPE_TRUCK -> const TruckIfc_t
+ * FleetMgr 'type'a bakip pVehicle'i ilgili arayuz tipine cast ederek kullanir.
+ *
+ * DIKKAT: 'void*' tip bilgisini tasimaz. type ile pVehicle'in uyumunu
+ * ENTEGRATOR garanti etmelidir; FleetMgr bunu dogrulayamaz. Uyumsuzluk
+ * (ornegin CAR tipi + tir arayuzu) tanimsiz davranistir.                  */
 typedef struct
 {
-    VehicleId_t        id;
-    VehicleType_t      type;
-    const CarIfc_t    *pCar;
-    const TruckIfc_t  *pTruck;
+    VehicleId_t     id;
+    VehicleType_t   type;
+    const void     *pVehicle;
 } FleetMgr_VehicleCfg_t;
 
 typedef struct
