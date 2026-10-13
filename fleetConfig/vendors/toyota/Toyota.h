@@ -3,8 +3,8 @@
  * @brief   [fleetConfig] Toyota Corolla: OTOMOBIL arayuzunu implement eden vendor.
  *
  *          Disariya tek bir arayuz tablosu acar: Toyota_CarIfc.
- *          Ortak islemler (bilgi, sur, yakit, bakim) bu tablonun 'common'
- *          alaninda, otomobile ozel islemler tablonun kendisindedir.
+ *          Ortak islemler (bilgi, sur, yakit, bakim) ve otomobile ozel
+ *          islemler ayni tablonun alanlaridir.
  */
 #ifndef TOYOTA_H
 #define TOYOTA_H

@@ -119,13 +119,12 @@ static MM_Ret_t volvo_unloadCargo(void)
 /* ---- Arayuz tablosu: const, tanimlandigi satirda dolu ------------------- */
 const TruckIfc_t Volvo_TruckIfc =
 {
-    .common =
-    {
-        .getInfo   = volvo_getInfo,
-        .drive     = volvo_drive,
-        .refuel    = volvo_refuel,
-        .doService = volvo_doService,
-    },
+    /* ortak */
+    .getInfo   = volvo_getInfo,
+    .drive     = volvo_drive,
+    .refuel    = volvo_refuel,
+    .doService = volvo_doService,
+    /* tipe ozel */
     .getMaxLoadKg = volvo_getMaxLoadKg,
     .getLoadKg    = volvo_getLoadKg,
     .loadCargo    = volvo_loadCargo,

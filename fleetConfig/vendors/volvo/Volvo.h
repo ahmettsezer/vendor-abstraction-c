@@ -3,8 +3,8 @@
  * @brief   [fleetConfig] Volvo FH: TIR arayuzunu implement eden vendor.
  *
  *          Disariya tek bir arayuz tablosu acar: Volvo_TruckIfc.
- *          Ortak islemler tablonun 'common' alaninda, tira ozel islemler
- *          tablonun kendisindedir.
+ *          Ortak islemler (bilgi, sur, yakit, bakim) ve tira ozel
+ *          islemler ayni tablonun alanlaridir.
  */
 #ifndef VOLVO_H
 #define VOLVO_H

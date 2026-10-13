@@ -109,13 +109,12 @@ static MM_Ret_t ford_setPassengers(uint8_t count)
 /* ---- Arayuz tablosu: const, tanimlandigi satirda dolu ------------------- */
 const CarIfc_t Ford_CarIfc =
 {
-    .common =
-    {
-        .getInfo   = ford_getInfo,
-        .drive     = ford_drive,
-        .refuel    = ford_refuel,
-        .doService = ford_doService,
-    },
+    /* ortak */
+    .getInfo   = ford_getInfo,
+    .drive     = ford_drive,
+    .refuel    = ford_refuel,
+    .doService = ford_doService,
+    /* tipe ozel */
     .getSeatCount  = ford_getSeatCount,
     .setPassengers = ford_setPassengers,
 };

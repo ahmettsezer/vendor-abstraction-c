@@ -109,13 +109,12 @@ static MM_Ret_t toyota_setPassengers(uint8_t count)
 /* ---- Arayuz tablosu: const, tanimlandigi satirda dolu ------------------- */
 const CarIfc_t Toyota_CarIfc =
 {
-    .common =
-    {
-        .getInfo   = toyota_getInfo,
-        .drive     = toyota_drive,
-        .refuel    = toyota_refuel,
-        .doService = toyota_doService,
-    },
+    /* ortak */
+    .getInfo   = toyota_getInfo,
+    .drive     = toyota_drive,
+    .refuel    = toyota_refuel,
+    .doService = toyota_doService,
+    /* tipe ozel */
     .getSeatCount  = toyota_getSeatCount,
     .setPassengers = toyota_setPassengers,
 };

@@ -24,7 +24,7 @@
  * tipe uymayan arayuz pointer'i NULL olmali:
  *   VEHICLE_TYPE_CAR   -> pCar dolu,   pTruck NULL
  *   VEHICLE_TYPE_TRUCK -> pTruck dolu, pCar NULL
- * Ortak islemler secilen arayuzun 'common' alanindan cagrilir.            */
+ * Ortak islemler (bilgi, sur, yakit, bakim) her iki arayuzde de vardir.  */
 typedef struct
 {
     VehicleId_t        id;

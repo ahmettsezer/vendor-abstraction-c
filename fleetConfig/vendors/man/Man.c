@@ -119,13 +119,12 @@ static MM_Ret_t man_unloadCargo(void)
 /* ---- Arayuz tablosu: const, tanimlandigi satirda dolu ------------------- */
 const TruckIfc_t Man_TruckIfc =
 {
-    .common =
-    {
-        .getInfo   = man_getInfo,
-        .drive     = man_drive,
-        .refuel    = man_refuel,
-        .doService = man_doService,
-    },
+    /* ortak */
+    .getInfo   = man_getInfo,
+    .drive     = man_drive,
+    .refuel    = man_refuel,
+    .doService = man_doService,
+    /* tipe ozel */
     .getMaxLoadKg = man_getMaxLoadKg,
     .getLoadKg    = man_getLoadKg,
     .loadCargo    = man_loadCargo,
