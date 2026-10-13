@@ -128,46 +128,6 @@
             "group": "build"
         },
         {
-            "label": "build fleetIndexConfig",
-            "type": "process",
-            "command": "C:/MinGW/bin/gcc.exe",
-            "args": [
-                "-std=c99",
-                "-Wall",
-                "-Wextra",
-                "-Wpedantic",
-                "-O0",
-                "-g3",
-                "-IfleetMgr",
-                "-Ivehicles/toyota",
-                "-Ivehicles/ford",
-                "-Ivehicles/man",
-                "-Ivehicles/volvo",
-                "-Iintegrator",
-                "fleetMgr/FleetMgr.c",
-                "vehicles/toyota/Toyota.c",
-                "vehicles/ford/Ford.c",
-                "vehicles/man/Man.c",
-                "vehicles/volvo/Volvo.c",
-                "integrator/Integrator_Cfg.c",
-                "integrator/main.c",
-                "-o",
-                "../build/demo_fleetIndex.exe"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/fleetIndexConfig"
-            },
-            "dependsOn": "mkdir build",
-            "problemMatcher": {
-                "base": "$gcc",
-                "fileLocation": [
-                    "relative",
-                    "${workspaceFolder}/fleetIndexConfig"
-                ]
-            },
-            "group": "build"
-        },
-        {
             "label": "build payloadConfig",
             "type": "process",
             "command": "C:/MinGW/bin/gcc.exe",
@@ -206,13 +166,94 @@
             "group": "build"
         },
         {
+            "label": "build fleetConfigA",
+            "type": "process",
+            "command": "C:/MinGW/bin/gcc.exe",
+            "args": [
+                "-std=c99",
+                "-Wall",
+                "-Wextra",
+                "-Wpedantic",
+                "-O0",
+                "-g3",
+                "-IfleetMgr",
+                "-Ivehicles/toyota",
+                "-Ivehicles/ford",
+                "-Ivehicles/man",
+                "-Ivehicles/volvo",
+                "-Iintegrator",
+                "fleetMgr/FleetMgr.c",
+                "vehicles/toyota/Toyota.c",
+                "vehicles/ford/Ford.c",
+                "vehicles/man/Man.c",
+                "vehicles/volvo/Volvo.c",
+                "integrator/Integrator_Cfg.c",
+                "integrator/main.c",
+                "-o",
+                "../build/demo_fleetA.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/fleetConfigA"
+            },
+            "dependsOn": "mkdir build",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}/fleetConfigA"
+                ]
+            },
+            "group": "build"
+        },
+        {
+            "label": "build fleetConfigB",
+            "type": "process",
+            "command": "C:/MinGW/bin/gcc.exe",
+            "args": [
+                "-std=c99",
+                "-Wall",
+                "-Wextra",
+                "-Wpedantic",
+                "-O0",
+                "-g3",
+                "-IfleetMgr",
+                "-Ivehicles/toyota",
+                "-Ivehicles/ford",
+                "-Ivehicles/man",
+                "-Ivehicles/volvo",
+                "-Iintegrator",
+                "fleetMgr/FleetMgr.c",
+                "vehicles/toyota/Toyota.c",
+                "vehicles/ford/Ford.c",
+                "vehicles/man/Man.c",
+                "vehicles/volvo/Volvo.c",
+                "integrator/Integrator_Cfg.c",
+                "integrator/main.c",
+                "-o",
+                "../build/demo_fleetB.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/fleetConfigB"
+            },
+            "dependsOn": "mkdir build",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}/fleetConfigB"
+                ]
+            },
+            "group": "build"
+        },
+        {
             "label": "build all",
             "dependsOn": [
                 "build constConfig",
                 "build switchDispatch",
                 "build fleetConfig",
-                "build fleetIndexConfig",
-                "build payloadConfig"
+                "build payloadConfig",
+                "build fleetConfigA",
+                "build fleetConfigB"
             ],
             "dependsOrder": "sequence",
             "problemMatcher": [],

@@ -90,24 +90,37 @@ Calisma zamaninda degisen tek sey `type_of[]` icindeki kucuk bir **index**; fonk
 pointer'lari ROM'daki `const` tabloda. Olasi cagri hedefleri kapali bir kume, `row_of`
 her zaman gecerli bir satir dondurur (gecersiz deger -> `PL_UNKNOWN`), cast ve NULL yok.
 
-### fleetIndexConfig: fleetConfig + payload birlesimi
+### fleetConfigA ve fleetConfigB: fleetConfig'in `void*` yerine tipli alternatifleri
 
-fleetConfig'teki tipe ozel arayuzler korunur; `void*` yerine payload'daki gibi
-**tipe gore ayri, tipli `const` tablolar ve index** kullanilir:
+`fleetConfig` konfigurasyon satirinda `const void *pVehicle` kullanir; tip ile arayuz
+uyumunu derleyici ve Init denetleyemez. A ve B ayni araclari, arayuzleri, API'yi ve
+`main.c`'yi kullanir (cikti birebir ayni); sadece `FleetMgr.h`, `FleetMgr.c` ve
+`Integrator_Cfg.c` farklidir. Islemler bilincli olarak sade tutuldu: ortak `init`,
+`getInfo`, `drive`; otomobilde `setPassengers`, tirda `loadCargo`.
 
+**A - Tipli alanlar** (`fleetConfigA/`): tek filo tablosu, tipe uymayan alan `NULL`.
 ```c
-static const CarIfc_t   * const s_cars[]   = { [CAR_TOYOTA_COROLLA] = &Toyota_CarIfc, ... };
-static const TruckIfc_t * const s_trucks[] = { [TRUCK_MAN_TGX] = &Man_TruckIfc, ... };
-{ VEHICLE_ID_TOYOTA_COROLLA, VEHICLE_TYPE_CAR,   CAR_TOYOTA_COROLLA },   /* { id, type, index } */
+{ VEHICLE_ID_TOYOTA_COROLLA, VEHICLE_TYPE_CAR,   &Toyota_CarIfc, NULL          },
+{ VEHICLE_ID_MAN_TGX,        VEHICLE_TYPE_TRUCK, NULL,           &Man_TruckIfc },
 ```
 
-- Otomobil tablosuna tir arayuzu yazmak derleme uyarisi/hatasidir; FleetMgr'da cast ve `void*` yoktur.
-- `carOf()` / `truckOf()` payload'daki `row_of` gibi **her zaman gecerli** bir arayuz doner:
-  tip uymazsa her islemi `FM_ERR_WRONG_TYPE` olan guvenli varsayilan arayuz gelir.
-- Init: index tipin tablosunda mi, arayuz pointer'lari dolu mu, ayni ID / ayni tablo satiri iki kez mi.
-- Bilincli olarak sade: ortak `init`, `getInfo`, `drive`; otomobilde `setPassengers`, tirda `loadCargo`.
+**B - Her tip icin ayri tablo** (`fleetConfigB/`): tip alani yok; tip, hangi tabloda oldugundan anlasilir.
+```c
+static const FleetMgr_CarCfg_t   s_cars[]   = { { VEHICLE_ID_TOYOTA_COROLLA, &Toyota_CarIfc }, ... };
+static const FleetMgr_TruckCfg_t s_trucks[] = { { VEHICLE_ID_MAN_TGX,        &Man_TruckIfc  }, ... };
+```
 
-`constConfig`, `switchDispatch` ve `fleetConfig` orneklerinde ek olarak su MISRA C:2012 kurallarina
+| | A | B |
+|---|---|---|
+| Yanlis yere tir arayuzu | Derleyici | Derleyici |
+| Tip ile dolu alan uyumsuz | Init yakalar | Yazilamaz |
+| Tip alani / NULL alan | Var / satir basina 1 | Yok / yok |
+| Tip `switch`'i ve guvenli varsayilan arayuz | Var (`carOf`/`truckOf`) | Gerekmez |
+| Tipe ozel islemde arama | Tum filo | Sadece o tipin tablosu |
+| ID tekilligi | Tek tablo icinde | Iki tablo arasinda da kontrol edilir |
+| `void*` / cast | Yok | Yok |
+
+`constConfig`, `switchDispatch` ve fleet orneklerinde ek olarak su MISRA C:2012 kurallarina
 uyulmustur: 15.5 (tek cikis noktasi), 16.3 (`switch` case'leri `break` ile biter), 17.7 (donus
 degerleri kullanilir veya `(void)` ile yok sayilir). Demo amacli `printf` kullanimi Rule 21.6
 sapmasidir.

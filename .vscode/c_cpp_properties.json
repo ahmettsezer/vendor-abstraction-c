@@ -38,20 +38,6 @@
             ]
         },
         {
-            "name": "fleetIndexConfig",
-            "compilerPath": "C:/MinGW/bin/gcc.exe",
-            "cStandard": "c99",
-            "intelliSenseMode": "windows-gcc-x86",
-            "includePath": [
-                "${workspaceFolder}/fleetIndexConfig/fleetMgr",
-                "${workspaceFolder}/fleetIndexConfig/vehicles/toyota",
-                "${workspaceFolder}/fleetIndexConfig/vehicles/ford",
-                "${workspaceFolder}/fleetIndexConfig/vehicles/man",
-                "${workspaceFolder}/fleetIndexConfig/vehicles/volvo",
-                "${workspaceFolder}/fleetIndexConfig/integrator"
-            ]
-        },
-        {
             "name": "payloadConfig",
             "compilerPath": "C:/MinGW/bin/gcc.exe",
             "cStandard": "c99",
@@ -62,6 +48,34 @@
                 "${workspaceFolder}/payloadConfig/payloads/pod",
                 "${workspaceFolder}/payloadConfig/inventoryMgr",
                 "${workspaceFolder}/payloadConfig/consumers"
+            ]
+        },
+        {
+            "name": "fleetConfigA",
+            "compilerPath": "C:/MinGW/bin/gcc.exe",
+            "cStandard": "c99",
+            "intelliSenseMode": "windows-gcc-x86",
+            "includePath": [
+                "${workspaceFolder}/fleetConfigA/fleetMgr",
+                "${workspaceFolder}/fleetConfigA/vehicles/toyota",
+                "${workspaceFolder}/fleetConfigA/vehicles/ford",
+                "${workspaceFolder}/fleetConfigA/vehicles/man",
+                "${workspaceFolder}/fleetConfigA/vehicles/volvo",
+                "${workspaceFolder}/fleetConfigA/integrator"
+            ]
+        },
+        {
+            "name": "fleetConfigB",
+            "compilerPath": "C:/MinGW/bin/gcc.exe",
+            "cStandard": "c99",
+            "intelliSenseMode": "windows-gcc-x86",
+            "includePath": [
+                "${workspaceFolder}/fleetConfigB/fleetMgr",
+                "${workspaceFolder}/fleetConfigB/vehicles/toyota",
+                "${workspaceFolder}/fleetConfigB/vehicles/ford",
+                "${workspaceFolder}/fleetConfigB/vehicles/man",
+                "${workspaceFolder}/fleetConfigB/vehicles/volvo",
+                "${workspaceFolder}/fleetConfigB/integrator"
             ]
         }
     ],
