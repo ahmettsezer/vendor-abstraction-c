@@ -76,20 +76,6 @@ satirda kullanilamaz. FleetMgr:
 - Tipe gore yonetir: bakim araligi tipe gore (otomobil 15.000, tir 30.000 km), yolcuya yeten
   en kucuk otomobili ve yuke yeten en kucuk tiri bulur, tip bazinda filo ozeti cikarir.
 
-### payloadConfig: yuk istasyonlari (kokteki `Payload` taslaginin bolunmus hali)
-
-| Klasor | Icerik |
-|---|---|
-| `platform/` | `payload.h`: sozlesme, hicbir yuk tipini bilmez |
-| `payloads/` | `tank/`, `pod/`: yuk tipleri (vendor'lar), istasyon basina kendi durumlari |
-| `integrator/` | `integration.c`: `const OPS[PL_COUNT]` tablosu, `payload_bind`, `row_of`, dagitim; `main.c` |
-| `inventoryMgr/` | Yuk degisikligi isteklerini toplar, `payload_bind`'i sadece frame sinirinda cagirir (ornek olarak eklendi) |
-| `consumers/` | `weight_balance.c`: sadece sozlesmeyi bilen tuketici |
-
-Calisma zamaninda degisen tek sey `type_of[]` icindeki kucuk bir **index**; fonksiyon
-pointer'lari ROM'daki `const` tabloda. Olasi cagri hedefleri kapali bir kume, `row_of`
-her zaman gecerli bir satir dondurur (gecersiz deger -> `PL_UNKNOWN`), cast ve NULL yok.
-
 ### fleetConfigA ve fleetConfigB: fleetConfig'in `void*` yerine tipli alternatifleri
 
 `fleetConfig` konfigurasyon satirinda `const void *pVehicle` kullanir; tip ile arayuz

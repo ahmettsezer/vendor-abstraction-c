@@ -38,19 +38,6 @@
             ]
         },
         {
-            "name": "payloadConfig",
-            "compilerPath": "C:/MinGW/bin/gcc.exe",
-            "cStandard": "c99",
-            "intelliSenseMode": "windows-gcc-x86",
-            "includePath": [
-                "${workspaceFolder}/payloadConfig/platform",
-                "${workspaceFolder}/payloadConfig/payloads/tank",
-                "${workspaceFolder}/payloadConfig/payloads/pod",
-                "${workspaceFolder}/payloadConfig/inventoryMgr",
-                "${workspaceFolder}/payloadConfig/consumers"
-            ]
-        },
-        {
             "name": "fleetConfigA",
             "compilerPath": "C:/MinGW/bin/gcc.exe",
             "cStandard": "c99",
