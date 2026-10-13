@@ -178,7 +178,8 @@ footer { border-top: 1px solid var(--line); padding-top: 16px; color: var(--mute
     <li><a href="#sa"><span class="n">5</span>Statik analiz durumu</a></li>
     <li><a href="#karsilastirma"><span class="n">6</span>Genel karşılaştırma</a></li>
     <li><a href="#buyume"><span class="n">7</span>Büyüyen sistem: çok tip, çok işlem</a></li>
-    <li><a href="#secim"><span class="n">8</span>Değerlendirme ve öneri</a></li>
+    <li><a href="#erisim"><span class="n">8</span>ID erişimi: index mi, arama mı?</a></li>
+    <li><a href="#secim"><span class="n">9</span>Değerlendirme ve öneri</a></li>
   </ol>
 </nav>
 
@@ -229,7 +230,7 @@ footer { border-top: 1px solid var(--line); padding-top: 16px; color: var(--mute
       <tr><td><strong>fleetConfigIndexed</strong></td><td class="y">Doğrudan index</td><td><code>void*</code> + tipe göre cast</td></tr>
     </tbody>
   </table></div>
-  <p>İki soru birbirinden bağımsız. Örneğin "doğrudan index" fikri A ile de birleştirilebilir (bkz. <a href="#secim">8</a>).</p>
+  <p>İki soru birbirinden bağımsız. Örneğin "doğrudan index" fikri A ile de birleştirilebilir (bkz. <a href="#secim">9</a>).</p>
 </section>
 
 <!-- ================================================================== -->
@@ -525,8 +526,65 @@ else                                                         { *ppV = &amp;s_pCf
 </section>
 
 <!-- ================================================================== -->
+<section class="sec" id="erisim">
+  <h2 class="sec-title"><span class="n">8</span>ID erişimi: index mi, arama mı?</h2>
+  <p>Sık sorulan soru: <em>"Doğrudan index ile erişirsem statik analiz aracı bulur, ID'yi arayarak erişirsem bulamaz diyebilir miyiz?"</em></p>
+
+  <div class="note"><span class="lbl">Kısa cevap</span><p><strong>Hayır.</strong> İkisi de analiz edilebilir. Fark "bulur / bulamaz" düzeyinde değil; <strong>ne kadar kesin ve ne kadar zahmetsiz bulduğu</strong> düzeyinde, ve bu da aracın türüne ve yapılan analize göre değişir.</p></div>
+
+  <h3>runtimeRegister'daki sorunla karıştırılmamalı</h3>
+  <p>runtimeRegister'da sorun aramanın kendisi değildi; <strong>aranan tablonun RAM'de, çalışma zamanında doldurulmasıydı</strong>. Araç tablonun içeriğini bilemiyordu. Fleet örneklerinde aranan tablo <code>const</code> ve içeriği kaynak kodda yazılı; arama yapılan tasarımda da analiz için gereken bilgi eksiksiz mevcut.</p>
+
+  <h3>Üç ayrı soru</h3>
+<pre><code>/* Index */                                   /* ID aramasi */
+if (id &lt; count) { pV = &amp;tablo[id]; }          for (i = 0u; i &lt; count; i++) {
+                                                  if (tablo[i].id == id) { pV = &amp;tablo[i]; }
+                                              }</code></pre>
+  <ol>
+    <li><strong>Erişim sınır içinde mi?</strong> Index'te kontrol erişimin hemen yanında; aramada index'i döngü koşulu sınırlıyor. İkisini de bütün araçlar kolayca doğrular. "Bulunamadı" dalı ikisinde de var ve ikisinde de sonuç <code>ret</code> ile birlikte bir çıkış parametresiyle dönüyor; bazı araçlar bu ilişkiyi takip edemeyip yanlış alarm verebilir, ama bu iki tasarımda da aynı. <strong>Fark yok.</strong></li>
+    <li><strong>Hangi fonksiyon çağrılıyor?</strong>
+      <ul>
+        <li><em>"Bu çağrı noktasından hangi fonksiyonlar çağrılabilir?"</em> (call graph, stack analizi, MISRA): Araçların çoğu bunu bağlamdan bağımsız cevaplar; sonuç tablodaki bütün araçların fonksiyonları olur. Küme iki tasarımda da aynı. <strong>Fark yok.</strong></li>
+        <li><em>"<code>FleetMgr_Drive(VEHICLE_ID_TOYOTA, ...)</code> çağrısında tam olarak hangisi?"</em> (formel araçlarda bağlama duyarlı kesinlik): Index'te araç sabit değeri taşıyıp <code>tablo[1]</code>'i doğrudan okur. Aramada döngüyü sabit veri üzerinde "çalıştırmak" zorundadır; küçük tablolarda döngüyü açarak (unroll) aynı kesinliğe ulaşır, tablo büyüyünce ya da açma sınırı aşılınca "herhangi bir satır" sonucuna inebilir (widening). <strong>Fark var: "bulamaz" değil, "daha pahalı ve tablo büyüdükçe daha az kesin".</strong></li>
+      </ul>
+    </li>
+    <li><strong>Zamanlama (WCET) ve döngü sınırı.</strong> Arama bir döngü ve sınırı çalışma zamanında atanan bir pointer üzerinden okunuyor (<code>s_pCfg-&gt;vehicleCount</code>). WCET araçları (örneğin AbsInt aiT) bu sınırı her zaman kendisi çıkaramaz; elle bir döngü sınırı annotation'ı gerekebilir ve en kötü süre araç sayısıyla büyür. Index'te döngü yok; süre sabit, annotation gerekmez. <strong>Somut fark burada.</strong></li>
+  </ol>
+
+  <h3>Araç türüne göre</h3>
+  <div class="tbl wide"><table>
+    <thead><tr><th>Analiz</th><th>Index</th><th>ID araması</th><th>Fark</th></tr></thead>
+    <tbody>
+      <tr><td>MISRA kuralları (Parasoft, Helix QAC, PC-lint)</td><td class="y">Temiz</td><td class="y">Temiz</td><td>Yok</td></tr>
+      <tr><td>Hata avcılığı: sınır, NULL (Parasoft flow analysis, Coverity, Polyspace Bug Finder)</td><td class="y">Doğrular</td><td class="y">Doğrular</td><td>Pratikte yok</td></tr>
+      <tr><td>Call graph ve stack (çağrılabilecek fonksiyon kümesi)</td><td>Bütün tablo</td><td>Bütün tablo</td><td>Yok</td></tr>
+      <tr><td>Formel kanıt, çağrı başına kesinlik (Polyspace Code Prover, Astrée)</td><td class="y">Kesin, ucuz</td><td class="m">Küçük tabloda kesin; büyüdükçe kaba olabilir</td><td><strong>Var</strong></td></tr>
+      <tr><td>WCET (aiT gibi)</td><td class="y">Sabit süre, annotation yok</td><td class="m">Döngü sınırı annotation'ı gerekebilir; süre araç sayısıyla büyür</td><td><strong>Var</strong></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Parasoft C/C++test özelinde</h3>
+  <p>Parasoft C/C++test; MISRA, AUTOSAR C++14 ve CERT gibi kodlama standartlarını kontrol eden, flow analysis ile olası hataları arayan ve aynı ortamda unit test ve coverage (MC/DC dahil) sunan bir araç. Flow analysis bir <strong>hata avcısıdır</strong>: Olası hataları bulmaya çalışır, ama "bu kodda hiç çalışma zamanı hatası yok" diye kanıt sunmaz.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Seviye</th><th>Parasoft C/C++test</th><th>Polyspace</th></tr></thead>
+    <tbody>
+      <tr><td>Kodlama kuralı (MISRA)</td><td class="y">Güçlü</td><td>Bug Finder</td></tr>
+      <tr><td>Hata avcılığı</td><td>Flow analysis</td><td>Bug Finder</td></tr>
+      <tr><td>Formel kanıt</td><td class="n">Yok</td><td>Code Prover</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><strong>Index ile arama arasında:</strong> Parasoft çağrı hedeflerini kanıtlamaya çalışmadığı için iki tasarımın raporlarında pratikte fark görülmez; dizi erişimlerini ikisinde de güvenli bulur.</li>
+    <li><strong>Fleet tasarımlarında belirgin fark yaratan kural:</strong> MISRA 11.5. <code>void*</code> kullanan tasarımlardaki her cast ayrı bir bulgu olarak çıkar; tipli alanlarda bu bulgular yoktur. Indexed'te enum'un <code>uint8_t</code> parametreye geçmesi MISRA 10.3 olarak işaretlenebilir. Demolardaki <code>printf</code> kullanımı 21.6 bulgusudur.</li>
+    <li><strong>Çözemediği dolaylı çağrılarda</strong> bir hata avcısı genellikle sessiz kalır; formel bir araç ise "kanıtlayamadım" der. Parasoft'ta uyarı görülmemesi, o yolun kanıtlandığı anlamına gelmez.</li>
+  </ul>
+
+  <div class="note"><span class="lbl">Doğru ifade</span><p>İkisi de statik analize uygun. Doğrudan index; formel araçlarda çağrı başına kesinliği ucuzlatır, WCET analizinde döngü sınırı ihtiyacını ortadan kaldırır ve bazı hata türlerini <strong>tasarım seviyesinde</strong> imkânsız kılar (aynı ID'nin iki kez yazılması, sıfır kalmış bir ID'nin ilk gerçek aracı seçmesi). Parasoft gibi kural ve hata odaklı araçlarda iki tasarım arasında belirgin bir fark yoktur. Index'in asıl kazancı, aracın "bulup bulamaması"ndan çok zamanlama analizi ve tasarımın getirdiği garantilerdir.</p></div>
+</section>
+
+<!-- ================================================================== -->
 <section class="sec" id="secim">
-  <h2 class="sec-title"><span class="n">8</span>Değerlendirme ve öneri</h2>
+  <h2 class="sec-title"><span class="n">9</span>Değerlendirme ve öneri</h2>
 
   <h3>Öneri: A'nın tipli alanları + Indexed'in doğrudan erişimi</h3>
   <p>Çok tipli, çok işlemli ve fonksiyon pointer'ı zorunlu bir sistem için dört tasarımdan birini olduğu gibi almak yerine iki iyi tarafı birleştirmek öneriliyor:</p>
