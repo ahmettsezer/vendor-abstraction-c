@@ -2,7 +2,7 @@
  * @file    main.c
  * @brief   [switchDispatch] Entegrator ornegi - switch ile dagitim.
  *
- *          Senaryo runtimeRegister ile ayni; fark sadece 1. adimda:
+ *          Senaryo diger orneklerle ayni; fark sadece 1. adimda:
  *          runtime Register yok, vendor'lar ModuleMgr_Cfg.c'de sabit.
  *
  *          Not: printf/setvbuf yalnizca demo icindir (MISRA 21.6 sapmasi).

@@ -2,44 +2,6 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug runtimeRegister (runtime register)",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/build/demo_runtimeReg.exe",
-            "args": [],
-            "cwd": "${workspaceFolder}/runtimeRegister",
-            "stopAtEntry": true,
-            "externalConsole": true,
-            "MIMode": "gdb",
-            "miDebuggerPath": "C:/MinGW/bin/gdb.exe",
-            "preLaunchTask": "build runtimeRegister",
-            "setupCommands": [
-                {
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
-        },
-        {
-            "name": "Debug runtimeRegisterConst (runtime register + const tables)",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/build/demo_runtimeRegConst.exe",
-            "args": [],
-            "cwd": "${workspaceFolder}/runtimeRegisterConst",
-            "stopAtEntry": true,
-            "externalConsole": true,
-            "MIMode": "gdb",
-            "miDebuggerPath": "C:/MinGW/bin/gdb.exe",
-            "preLaunchTask": "build runtimeRegisterConst",
-            "setupCommands": [
-                {
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
-        },
-        {
             "name": "Debug constConfig (const config via Init)",
             "type": "cppdbg",
             "request": "launch",

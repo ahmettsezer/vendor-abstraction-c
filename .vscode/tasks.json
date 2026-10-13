@@ -17,78 +17,6 @@
             }
         },
         {
-            "label": "build runtimeRegister",
-            "type": "process",
-            "command": "C:/MinGW/bin/gcc.exe",
-            "args": [
-                "-std=c99",
-                "-Wall",
-                "-Wextra",
-                "-Wpedantic",
-                "-O0",
-                "-g3",
-                "-ImoduleMgr",
-                "-Ivendors/vendorA",
-                "-Ivendors/vendorB",
-                "-Iintegrator",
-                "moduleMgr/ModuleMgr.c",
-                "vendors/vendorA/VendorA.c",
-                "vendors/vendorB/VendorB.c",
-                "integrator/Integrator_Cfg.c",
-                "integrator/main.c",
-                "-o",
-                "../build/demo_runtimeReg.exe"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/runtimeRegister"
-            },
-            "dependsOn": "mkdir build",
-            "problemMatcher": {
-                "base": "$gcc",
-                "fileLocation": [
-                    "relative",
-                    "${workspaceFolder}/runtimeRegister"
-                ]
-            },
-            "group": "build"
-        },
-        {
-            "label": "build runtimeRegisterConst",
-            "type": "process",
-            "command": "C:/MinGW/bin/gcc.exe",
-            "args": [
-                "-std=c99",
-                "-Wall",
-                "-Wextra",
-                "-Wpedantic",
-                "-O0",
-                "-g3",
-                "-ImoduleMgr",
-                "-Ivendors/vendorA",
-                "-Ivendors/vendorB",
-                "-Iintegrator",
-                "moduleMgr/ModuleMgr.c",
-                "vendors/vendorA/VendorA.c",
-                "vendors/vendorB/VendorB.c",
-                "integrator/Integrator_Cfg.c",
-                "integrator/main.c",
-                "-o",
-                "../build/demo_runtimeRegConst.exe"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/runtimeRegisterConst"
-            },
-            "dependsOn": "mkdir build",
-            "problemMatcher": {
-                "base": "$gcc",
-                "fileLocation": [
-                    "relative",
-                    "${workspaceFolder}/runtimeRegisterConst"
-                ]
-            },
-            "group": "build"
-        },
-        {
             "label": "build constConfig",
             "type": "process",
             "command": "C:/MinGW/bin/gcc.exe",
@@ -280,8 +208,6 @@
         {
             "label": "build all",
             "dependsOn": [
-                "build runtimeRegister",
-                "build runtimeRegisterConst",
                 "build constConfig",
                 "build switchDispatch",
                 "build fleetConfig",

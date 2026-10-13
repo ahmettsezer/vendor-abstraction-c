@@ -2,7 +2,7 @@
  * @file    ModuleMgr.c
  * @brief   [switchDispatch] Generic modul yoneticisi implementasyonu.
  *
- *          runtimeRegister'dan farklar:
+ *          Calisma zamaninda kayit (Register) yapan bir tasarima gore farklar:
  *            - Fonksiyon pointer, kayit tablosu, Register YOK.
  *            - Ortak kontroller (init, NULL parametre) burada; asil
  *              yonlendirme entegratorun ModuleMgr_Cfg_xxx() fonksiyonlarinda.

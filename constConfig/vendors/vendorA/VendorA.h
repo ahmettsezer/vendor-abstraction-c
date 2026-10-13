@@ -2,7 +2,7 @@
  * @file    VendorA.h
  * @brief   [constConfig] Ornek vendor A: kendisine yazilan SON degeri saklar.
  *
- *          runtimeRegister'dan farki: register YOK; arayuz tablosu 'extern const' olarak
+ *          Calisma zamaninda kayit (Register) yapan bir tasarima gore farki: register YOK; arayuz tablosu 'extern const' olarak
  *          disari acilir; entegrator bunu ModuleMgr konfigurasyonuna yazar
  *          ve konfigurasyonu ModuleMgr_Init(&cfg) ile verir.
  */

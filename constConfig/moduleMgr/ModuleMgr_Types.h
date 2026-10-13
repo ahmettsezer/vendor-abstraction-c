@@ -2,7 +2,7 @@
  * @file    ModuleMgr_Types.h
  * @brief   [constConfig] ModuleMgr <-> Vendor sozlesmesi (contract).
  *
- *          runtimeRegister'dan farki: VendorIfc_t her vendor tarafindan
+ *          Calisma zamaninda kayit (Register) yapan bir tasarima gore farki: VendorIfc_t her vendor tarafindan
  *          'const' olarak ve tanimlandigi satirda doldurulur (flash'ta durur).
  */
 #ifndef MODULE_MGR_TYPES_H

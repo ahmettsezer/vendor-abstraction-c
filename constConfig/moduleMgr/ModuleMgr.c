@@ -2,7 +2,7 @@
  * @file    ModuleMgr.c
  * @brief   [constConfig] Generic modul yoneticisi implementasyonu.
  *
- *          runtimeRegister'dan farklar:
+ *          Calisma zamaninda kayit (Register) yapan bir tasarima gore farklar:
  *            - Register ve RAM'deki kayit dizisi YOK. Konfigurasyon s_pCfg ile
  *              tutulur (Init'te BIR KEZ atanan tek pointer); gosterdigi tablo
  *              entegratorde 'const' ve flash'ta.

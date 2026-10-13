@@ -2,7 +2,7 @@
  * @file    VendorA.h
  * @brief   [switchDispatch] Ornek vendor A: kendisine yazilan SON degeri saklar.
  *
- *          runtimeRegister'dan farki: fonksiyonlar static degil PUBLIC.
+ *          Calisma zamaninda kayit (Register) yapan bir tasarima gore farki: fonksiyonlar static degil PUBLIC.
  *          Entegratorun dagiticisi (ModuleMgr_Cfg.c) bunlari dogrudan cagirir.
  */
 #ifndef VENDOR_A_H

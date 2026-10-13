@@ -1,7 +1,7 @@
 # vendor-abstraction-c
 
 C dilinde, vendor'lardan bagimsiz bir modul yoneticisi (**ModuleMgr**) ve bu yoneticinin
-**dort farkli dagitim (dispatch) ornegi** ile bunlardan birine dayanan gercekci bir filo yonetimi ornegi. Ornekler statik analize uygunluk acisindan
+farkli dagitim (dispatch) ornekleri. Ornekler statik analize uygunluk acisindan
 (MISRA C, call graph, stack analizi, formel kanit) karsilastirilmistir.
 
 ## Mimari
@@ -26,19 +26,17 @@ ModuleMgr'in bir `VendorId` icin hangi fonksiyonu cagiracagini **nereden ogrendi
 
 | Klasor | Dagitim yontemi | Fonksiyon pointer | Cagri hedefi derleme aninda belli mi |
 |---|---|---|---|
-| [`runtimeRegister`](runtimeRegister/) | Vendor kendini runtime'da `Register` eder; tablolar RAM'de | Var | Hayir |
-| [`runtimeRegisterConst`](runtimeRegisterConst/) | `runtimeRegister` ile ayni, ama tablolar `static const` (flash) ve ModuleMgr `const` pointer tutar | Var | Kume olarak (A veya B) |
 | [`constConfig`](constConfig/) | Register yok; entegratorun `const` tablosu `ModuleMgr_Init(&cfg)` ile verilir | Var | Evet |
 | [`switchDispatch`](switchDispatch/) | Entegratorun `switch` dagiticisi, dogrudan cagri | Yok | Evet |
 
 ### Statik analiz acisindan
 
-- **runtimeRegister:** Cagri zinciri runtime'da, RAM'deki bir kayit dizisi uzerinden kurulur.
-  Araclar `id <-> fonksiyon` eslesmesini kaybeder; call graph ve stack analizi icin elle
-  annotation gerekir. Tablolar RAM'de oldugu icin bozulabilir.
-- **runtimeRegisterConst:** Tablolarin ici (hangi alan hangi fonksiyonu gosteriyor) derleme
-  aninda kesin ve flash'ta; ModuleMgr tabloyu degistiremez (MISRA 8.13). Ama kayit dizisi
-  hala runtime'da doldugu icin `id <-> tablo` eslesmesi analizde kaybolur.
+> Calisma zamaninda kayit (`Register`) yapan iki ilk ornek (`runtimeRegister`,
+> `runtimeRegisterConst`) kaldirildi. Kayit RAM'deki bir diziye calisma zamaninda
+> yapildigi icin analiz araclari `id <-> fonksiyon` eslesmesini kaybediyordu; tablolar
+> `const` yapilsa bile kayit dizisi bu bagi koparmaya devam ediyordu. Asagidaki ornekler
+> bu eslesmeyi derleme aninda sabitler.
+
 - **constConfig:** Fonksiyon pointer'lari kalir, ama hedefleri ve `id <-> vendor` eslesmesi
   flash'taki `const` tablonun tanimlama satirindan kesin okunur. Konfigurasyon Init
   parametresi oldugu icin ModuleMgr'in `extern` bagimliligi yoktur

@@ -2,7 +2,7 @@
  * @file    ModuleMgr_Types.h
  * @brief   [switchDispatch] Ortak tipler.
  *
- *          runtimeRegister'dan farki: fonksiyon pointer typedef'leri ve
+ *          Calisma zamaninda kayit (Register) yapan bir tasarima gore farki: fonksiyon pointer typedef'leri ve
  *          VendorIfc_t YOK. Vendor'lar ayni imzada PUBLIC fonksiyonlar sunar,
  *          entegratorun dagitici (switch) kodu onlari dogrudan cagirir.
  */

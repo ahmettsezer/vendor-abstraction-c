@@ -2,7 +2,7 @@
  * @file    main.c
  * @brief   [constConfig] Entegrator ornegi - konfigurasyon Init parametresi.
  *
- *          Senaryo runtimeRegister ile ayni; fark 1. adimda:
+ *          Senaryo diger orneklerle ayni; fark 1. adimda:
  *          ModuleMgr_Init(&Integrator_ModuleMgrCfg) - konfigurasyonu entegrator
  *          parametre olarak verir. Ayrica Init oncesi cagri -> ERR_NOT_INIT.
  *
