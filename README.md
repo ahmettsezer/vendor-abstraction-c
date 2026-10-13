@@ -106,17 +106,18 @@ static const FleetMgr_TruckCfg_t s_trucks[] = { { VEHICLE_ID_MAN_TGX,        &Ma
 | ID tekilligi | Tek tablo icinde | Iki tablo arasinda da kontrol edilir |
 | `void*` / cast | Yok | Yok |
 
-### fleetConfigIndexed: A + arac ID'si = tablo index'i
+### fleetConfigIndexed: fleetConfig + arac ID'si = tablo index'i
 
-`fleetConfigA` ile ayni tipli alanlar; fark: FleetMgr ID'yi tabloda **aramaz**. ID'ler
-entegratorde ardisik bir `typedef enum`, tablo bu enum ile index'lenir:
+`fleetConfig` ile ayni (ayni `const void *pVehicle`, ayni fonksiyonlar ve senaryo); tek fark:
+FleetMgr ID'yi tabloda **aramaz**. ID'ler entegratorde ardisik bir `typedef enum`, tablo bu
+enum ile index'lenir:
 
 ```c
 typedef enum { NO_VEHICLE_ID = VEHICLE_ID_NONE, VEHICLE_ID_TOYOTA_COROLLA, ..., VEHICLE_ID_COUNT } FleetVehicleId_t;
 
 static const FleetMgr_VehicleCfg_t s_fleet[VEHICLE_ID_COUNT] = {
-    [NO_VEHICLE_ID]             = { VEHICLE_TYPE_NONE, NULL,           NULL },
-    [VEHICLE_ID_TOYOTA_COROLLA] = { VEHICLE_TYPE_CAR,  &Toyota_CarIfc, NULL },
+    [NO_VEHICLE_ID]             = { VEHICLE_TYPE_NONE, NULL           },
+    [VEHICLE_ID_TOYOTA_COROLLA] = { VEHICLE_TYPE_CAR,  &Toyota_CarIfc },
     ...
 };
 ```
@@ -125,6 +126,7 @@ static const FleetMgr_VehicleCfg_t s_fleet[VEHICLE_ID_COUNT] = {
 - `tablo[0]` = "arac yok" (defansif): sifir kalmis bir ID ilk gercek araci secmez.
 - Satirda `id` alani yok; ayni ID iki kez yazilamaz. Unutulan bir satir sifirla dolar
   (`VEHICLE_TYPE_NONE`) ve Init reddeder.
+- `void*` kaynakli zayiflik `fleetConfig` ile aynidir: tip ile arayuz uyumsuzlugu yakalanmaz.
 - Bedel: ID'ler ardisik ve konumsaldir; dis numaralar (plaka, filo no) gerekiyorsa veri
   olarak tutulup sistem girisinde bir kez ID'ye cevrilir.
 

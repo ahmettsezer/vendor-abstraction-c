@@ -97,7 +97,7 @@
             ]
         },
         {
-            "name": "Debug fleetConfigIndexed (A + ID = index)",
+            "name": "Debug fleetConfigIndexed (fleetConfig + ID = index)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/demo_fleetIndexed.exe",

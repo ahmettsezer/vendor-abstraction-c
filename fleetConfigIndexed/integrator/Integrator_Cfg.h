@@ -2,6 +2,9 @@
  * @file    Integrator_Cfg.h
  * @brief   [fleetConfigIndexed] Entegratorun filo konfigurasyonu.
  *
+ *          Bu header'i SADECE entegrator kullanir; FleetMgr bilmez.
+ *          Konfigurasyon FleetMgr_Init(&Integrator_FleetCfg) ile verilir.
+ *
  *          Arac ID'leri ardisik bir enum: ID = filo tablosundaki satir.
  *          0 = NO_VEHICLE_ID ("arac yok", defansif). Yeni arac:
  *          VEHICLE_ID_COUNT'tan once bir isim + Integrator_Cfg.c'de bir satir.
