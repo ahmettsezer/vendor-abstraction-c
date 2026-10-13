@@ -62,7 +62,7 @@ islemler her iki arayuzde de ayni isim ve imzayla, dogrudan alan olarak bulunur:
 | `TruckIfc_t` | MAN TGX, Volvo FH | `init`, `getInfo`, `drive`, `refuel`, `doService` | `getMaxLoadKg`, `getLoadKg`, `loadCargo`, `unloadCargo` |
 
 Entegratorun tablosunda her arac icin `{ id, type, &otomobil, &tir }` yazilir; tipe uymayan
-arayuz `NULL` birakilir. Her vendor tek bir araci temsil eder; bir arayuz tablosu iki
+arayuz `NULL` birakilir. Her arac modulu (`vehicles/` altindaki her marka) tek bir araci temsil eder; bir arayuz tablosu iki
 satirda kullanilamaz. FleetMgr:
 
 - Init'te tip ile arayuz uyumunu, tum fonksiyon pointer'larini, tekrarlanan ID'yi ve ayni
@@ -71,7 +71,7 @@ satirda kullanilamaz. FleetMgr:
 - Entegratorun `main`'i markalari tanimaz; sadece `FleetMgr_Init(&cfg)` cagirir. Markalari
   bilen tek dosya konfigurasyon tablosudur (`Integrator_Cfg.c`).
 - Ortak islemleri tipe gore dogru arayuzden cagirir (`vehicleDrive` gibi yardimcilarla).
-- Tipe uymayan islemi (otomobile yuk) vendor'a gitmeden `FM_ERR_WRONG_TYPE` ile reddeder.
+- Tipe uymayan islemi (otomobile yuk) araca gitmeden `FM_ERR_WRONG_TYPE` ile reddeder.
 - Tipe gore yonetir: bakim araligi tipe gore (otomobil 15.000, tir 30.000 km), yolcuya yeten
   en kucuk otomobili ve yuke yeten en kucuk tiri bulur, tip bazinda filo ozeti cikarir.
 
