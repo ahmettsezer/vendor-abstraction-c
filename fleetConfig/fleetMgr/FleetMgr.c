@@ -8,7 +8,8 @@
  *            tutulur; gosterdigi tablo entegratorde 'const' ve flash'ta.
  *          - Her aracin tek bir arayuzu vardir (tipine gore CarIfc_t veya
  *            TruckIfc_t). Konfigurasyonda 'const void *pVehicle' olarak
- *            durur; type'a bakilip asCar/asTruck ile cast edilir.
+ *            durur; kullanildigi yerde type'a bakilip ilgili arayuz tipine
+ *            cast edilir (const CarIfc_t *pCar = (const CarIfc_t *)...).
  *          - Ortak islemler (init, bilgi, sur, yakit, bakim) iki arayuzde de
  *            ayni isimle bulunur; FleetMgr bunlari tipe gore dogru arayuzden
  *            cagiran yardimcilarla (vehicleXxx) kullanir.
@@ -16,44 +17,14 @@
  *            uymuyorsa araca hic gidilmez (FM_ERR_WRONG_TYPE).
  *          - MISRA: tek cikis noktasi (15.5), switch'te break (16.3),
  *            && / || sag tarafinda yan etkili cagri yok (13.5).
- *            Sapma: void* -> arayuz donusumu (11.5), sadece asCar/asTruck'ta.
+ *            Sapma: void* -> arayuz donusumu (11.5). Her donusum, type
+ *            kontrolunden (switch case veya getVehicleOfType) SONRA yapilir.
  */
 #include <stddef.h>
 #include "FleetMgr.h"
 
 /* NULL = init edilmemis. */
 static const FleetMgr_Config_t *s_pCfg = NULL;
-
-/* ======================================================================== */
-/*  void* -> arayuz donusumu (tek yer)                                      */
-/* ======================================================================== */
-
-/* MISRA C:2012 Rule 11.5 (advisory) sapmasi: void* -> nesne pointer'i.
- * Gerekce: konfigurasyon satiri tipten bagimsiz tek bir pointer tasir.
- * Guvence: donusum sadece 'type' kontrolunden sonra, sadece bu iki
- * fonksiyonda yapilir; type ile pVehicle uyumunu entegrator saglar.
- * Tip uymuyorsa NULL doner. */
-static const CarIfc_t *asCar(const FleetMgr_VehicleCfg_t *pV)
-{
-    const CarIfc_t *pCar = NULL;
-
-    if (pV->type == VEHICLE_TYPE_CAR)
-    {
-        pCar = (const CarIfc_t *)pV->pVehicle;
-    }
-    return pCar;
-}
-
-static const TruckIfc_t *asTruck(const FleetMgr_VehicleCfg_t *pV)
-{
-    const TruckIfc_t *pTruck = NULL;
-
-    if (pV->type == VEHICLE_TYPE_TRUCK)
-    {
-        pTruck = (const TruckIfc_t *)pV->pVehicle;
-    }
-    return pTruck;
-}
 
 /* ======================================================================== */
 /*  Ortak islemler: tipe gore dogru arayuzden cagri                         */
@@ -65,9 +36,21 @@ static FM_Ret_t vehicleInit(const FleetMgr_VehicleCfg_t *pV)
 
     switch (pV->type)
     {
-        case VEHICLE_TYPE_CAR:   ret = asCar(pV)->init();   break;
-        case VEHICLE_TYPE_TRUCK: ret = asTruck(pV)->init(); break;
-        default:                 ret = FM_ERR_CONFIG;      break;
+        case VEHICLE_TYPE_CAR:
+        {
+            const CarIfc_t *pCar = (const CarIfc_t *)pV->pVehicle;
+            ret = pCar->init();
+            break;
+        }
+        case VEHICLE_TYPE_TRUCK:
+        {
+            const TruckIfc_t *pTruck = (const TruckIfc_t *)pV->pVehicle;
+            ret = pTruck->init();
+            break;
+        }
+        default:
+            ret = FM_ERR_CONFIG;
+            break;
     }
     return ret;
 }
@@ -78,9 +61,21 @@ static FM_Ret_t vehicleGetInfo(const FleetMgr_VehicleCfg_t *pV, VehicleInfo_t *p
 
     switch (pV->type)
     {
-        case VEHICLE_TYPE_CAR:   ret = asCar(pV)->getInfo(pInfo);   break;
-        case VEHICLE_TYPE_TRUCK: ret = asTruck(pV)->getInfo(pInfo); break;
-        default:                 ret = FM_ERR_CONFIG;              break;
+        case VEHICLE_TYPE_CAR:
+        {
+            const CarIfc_t *pCar = (const CarIfc_t *)pV->pVehicle;
+            ret = pCar->getInfo(pInfo);
+            break;
+        }
+        case VEHICLE_TYPE_TRUCK:
+        {
+            const TruckIfc_t *pTruck = (const TruckIfc_t *)pV->pVehicle;
+            ret = pTruck->getInfo(pInfo);
+            break;
+        }
+        default:
+            ret = FM_ERR_CONFIG;
+            break;
     }
     return ret;
 }
@@ -91,9 +86,21 @@ static FM_Ret_t vehicleDrive(const FleetMgr_VehicleCfg_t *pV, uint32_t km)
 
     switch (pV->type)
     {
-        case VEHICLE_TYPE_CAR:   ret = asCar(pV)->drive(km);   break;
-        case VEHICLE_TYPE_TRUCK: ret = asTruck(pV)->drive(km); break;
-        default:                 ret = FM_ERR_CONFIG;         break;
+        case VEHICLE_TYPE_CAR:
+        {
+            const CarIfc_t *pCar = (const CarIfc_t *)pV->pVehicle;
+            ret = pCar->drive(km);
+            break;
+        }
+        case VEHICLE_TYPE_TRUCK:
+        {
+            const TruckIfc_t *pTruck = (const TruckIfc_t *)pV->pVehicle;
+            ret = pTruck->drive(km);
+            break;
+        }
+        default:
+            ret = FM_ERR_CONFIG;
+            break;
     }
     return ret;
 }
@@ -104,9 +111,21 @@ static FM_Ret_t vehicleRefuel(const FleetMgr_VehicleCfg_t *pV)
 
     switch (pV->type)
     {
-        case VEHICLE_TYPE_CAR:   ret = asCar(pV)->refuel();   break;
-        case VEHICLE_TYPE_TRUCK: ret = asTruck(pV)->refuel(); break;
-        default:                 ret = FM_ERR_CONFIG;        break;
+        case VEHICLE_TYPE_CAR:
+        {
+            const CarIfc_t *pCar = (const CarIfc_t *)pV->pVehicle;
+            ret = pCar->refuel();
+            break;
+        }
+        case VEHICLE_TYPE_TRUCK:
+        {
+            const TruckIfc_t *pTruck = (const TruckIfc_t *)pV->pVehicle;
+            ret = pTruck->refuel();
+            break;
+        }
+        default:
+            ret = FM_ERR_CONFIG;
+            break;
     }
     return ret;
 }
@@ -117,9 +136,21 @@ static FM_Ret_t vehicleService(const FleetMgr_VehicleCfg_t *pV)
 
     switch (pV->type)
     {
-        case VEHICLE_TYPE_CAR:   ret = asCar(pV)->doService();   break;
-        case VEHICLE_TYPE_TRUCK: ret = asTruck(pV)->doService(); break;
-        default:                 ret = FM_ERR_CONFIG;           break;
+        case VEHICLE_TYPE_CAR:
+        {
+            const CarIfc_t *pCar = (const CarIfc_t *)pV->pVehicle;
+            ret = pCar->doService();
+            break;
+        }
+        case VEHICLE_TYPE_TRUCK:
+        {
+            const TruckIfc_t *pTruck = (const TruckIfc_t *)pV->pVehicle;
+            ret = pTruck->doService();
+            break;
+        }
+        default:
+            ret = FM_ERR_CONFIG;
+            break;
     }
     return ret;
 }
@@ -161,11 +192,11 @@ static bool isTypeIfcValid(const FleetMgr_VehicleCfg_t *pV)
         switch (pV->type)
         {
             case VEHICLE_TYPE_CAR:
-                ok = isCarIfcValid(asCar(pV));
+                ok = isCarIfcValid((const CarIfc_t *)pV->pVehicle);
                 break;
 
             case VEHICLE_TYPE_TRUCK:
-                ok = isTruckIfcValid(asTruck(pV));
+                ok = isTruckIfcValid((const TruckIfc_t *)pV->pVehicle);
                 break;
 
             default:
@@ -412,15 +443,17 @@ FM_Ret_t FleetMgr_Car_GetSeatCount(VehicleId_t id, uint8_t *pSeats)
     const FleetMgr_VehicleCfg_t *pV = NULL;
     FM_Ret_t ret = getVehicleOfType(id, VEHICLE_TYPE_CAR, &pV);
 
-    if (ret == FM_OK)
+    if (ret == FM_OK)   /* tip burada dogrulandi */
     {
+        const CarIfc_t *pCar = (const CarIfc_t *)pV->pVehicle;
+
         if (pSeats == NULL)
         {
             ret = FM_ERR_PARAM;
         }
         else
         {
-            ret = asCar(pV)->getSeatCount(pSeats);
+            ret = pCar->getSeatCount(pSeats);
         }
     }
     return ret;
@@ -431,9 +464,11 @@ FM_Ret_t FleetMgr_Car_SetPassengers(VehicleId_t id, uint8_t count)
     const FleetMgr_VehicleCfg_t *pV = NULL;
     FM_Ret_t ret = getVehicleOfType(id, VEHICLE_TYPE_CAR, &pV);
 
-    if (ret == FM_OK)
+    if (ret == FM_OK)   /* tip burada dogrulandi */
     {
-        ret = asCar(pV)->setPassengers(count);
+        const CarIfc_t *pCar = (const CarIfc_t *)pV->pVehicle;
+
+        ret = pCar->setPassengers(count);
     }
     return ret;
 }
@@ -447,15 +482,17 @@ FM_Ret_t FleetMgr_Truck_GetMaxLoad(VehicleId_t id, uint32_t *pKg)
     const FleetMgr_VehicleCfg_t *pV = NULL;
     FM_Ret_t ret = getVehicleOfType(id, VEHICLE_TYPE_TRUCK, &pV);
 
-    if (ret == FM_OK)
+    if (ret == FM_OK)   /* tip burada dogrulandi */
     {
+        const TruckIfc_t *pTruck = (const TruckIfc_t *)pV->pVehicle;
+
         if (pKg == NULL)
         {
             ret = FM_ERR_PARAM;
         }
         else
         {
-            ret = asTruck(pV)->getMaxLoadKg(pKg);
+            ret = pTruck->getMaxLoadKg(pKg);
         }
     }
     return ret;
@@ -466,15 +503,17 @@ FM_Ret_t FleetMgr_Truck_GetLoad(VehicleId_t id, uint32_t *pKg)
     const FleetMgr_VehicleCfg_t *pV = NULL;
     FM_Ret_t ret = getVehicleOfType(id, VEHICLE_TYPE_TRUCK, &pV);
 
-    if (ret == FM_OK)
+    if (ret == FM_OK)   /* tip burada dogrulandi */
     {
+        const TruckIfc_t *pTruck = (const TruckIfc_t *)pV->pVehicle;
+
         if (pKg == NULL)
         {
             ret = FM_ERR_PARAM;
         }
         else
         {
-            ret = asTruck(pV)->getLoadKg(pKg);
+            ret = pTruck->getLoadKg(pKg);
         }
     }
     return ret;
@@ -485,9 +524,11 @@ FM_Ret_t FleetMgr_Truck_LoadCargo(VehicleId_t id, uint32_t kg)
     const FleetMgr_VehicleCfg_t *pV = NULL;
     FM_Ret_t ret = getVehicleOfType(id, VEHICLE_TYPE_TRUCK, &pV);
 
-    if (ret == FM_OK)
+    if (ret == FM_OK)   /* tip burada dogrulandi */
     {
-        ret = asTruck(pV)->loadCargo(kg);
+        const TruckIfc_t *pTruck = (const TruckIfc_t *)pV->pVehicle;
+
+        ret = pTruck->loadCargo(kg);
     }
     return ret;
 }
@@ -497,9 +538,11 @@ FM_Ret_t FleetMgr_Truck_UnloadCargo(VehicleId_t id)
     const FleetMgr_VehicleCfg_t *pV = NULL;
     FM_Ret_t ret = getVehicleOfType(id, VEHICLE_TYPE_TRUCK, &pV);
 
-    if (ret == FM_OK)
+    if (ret == FM_OK)   /* tip burada dogrulandi */
     {
-        ret = asTruck(pV)->unloadCargo();
+        const TruckIfc_t *pTruck = (const TruckIfc_t *)pV->pVehicle;
+
+        ret = pTruck->unloadCargo();
     }
     return ret;
 }
@@ -542,18 +585,23 @@ FM_Ret_t FleetMgr_GetFleetSummary(FleetMgr_Summary_t *pSummary)
             switch (pV->type)
             {
                 case VEHICLE_TYPE_CAR:
-                    if (asCar(pV)->getSeatCount(&seats) == FM_OK)
+                {
+                    const CarIfc_t *pCar = (const CarIfc_t *)pV->pVehicle;
+                    if (pCar->getSeatCount(&seats) == FM_OK)
                     {
                         pSummary->totalSeats += seats;
                     }
                     break;
-
+                }
                 case VEHICLE_TYPE_TRUCK:
-                    if (asTruck(pV)->getMaxLoadKg(&maxKg) == FM_OK)
+                {
+                    const TruckIfc_t *pTruck = (const TruckIfc_t *)pV->pVehicle;
+                    if (pTruck->getMaxLoadKg(&maxKg) == FM_OK)
                     {
                         pSummary->totalMaxLoadKg += maxKg;
                     }
                     break;
+                }
 
                 default:
                     break;
@@ -599,7 +647,9 @@ FM_Ret_t FleetMgr_FindCarForPassengers(uint8_t passengers, VehicleId_t *pId)
 
             if ((pV->type == VEHICLE_TYPE_CAR) && isAvailable(pV))
             {
-                if (asCar(pV)->getSeatCount(&seats) == FM_OK)
+                const CarIfc_t *pCar = (const CarIfc_t *)pV->pVehicle;
+
+                if (pCar->getSeatCount(&seats) == FM_OK)
                 {
                     /* yeten en kucuk arac: buyuk araclar buyuk gorevlere kalsin */
                     if ((seats >= passengers) && (seats < bestSeats))
@@ -638,7 +688,9 @@ FM_Ret_t FleetMgr_FindTruckForLoad(uint32_t kg, VehicleId_t *pId)
 
             if ((pV->type == VEHICLE_TYPE_TRUCK) && isAvailable(pV))
             {
-                if (asTruck(pV)->getMaxLoadKg(&maxKg) == FM_OK)
+                const TruckIfc_t *pTruck = (const TruckIfc_t *)pV->pVehicle;
+
+                if (pTruck->getMaxLoadKg(&maxKg) == FM_OK)
                 {
                     if ((maxKg >= kg) && (maxKg < bestKg))
                     {

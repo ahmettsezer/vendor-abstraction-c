@@ -62,8 +62,8 @@ islemler her iki arayuzde de ayni isim ve imzayla, dogrudan alan olarak bulunur:
 | `TruckIfc_t` | MAN TGX, Volvo FH | `init`, `getInfo`, `drive`, `refuel`, `doService` | `getMaxLoadKg`, `getLoadKg`, `loadCargo`, `unloadCargo` |
 
 Entegratorun tablosunda her arac icin `{ id, type, &arayuz }` yazilir. Arayuz
-`const void *pVehicle` olarak saklanir; FleetMgr `type`'a bakip `asCar()` / `asTruck()` ile
-ilgili arayuz tipine cast eder (MISRA 11.5 sapmasi, sadece bu iki fonksiyonda). `type` ile
+`const void *pVehicle` olarak saklanir; FleetMgr `type`'a bakip kullanildigi yerde
+ilgili arayuz tipine cast eder (MISRA 11.5 sapmasi; her cast tip kontrolunden sonra). `type` ile
 arayuzun uyumunu **entegrator** garanti etmelidir: `void*` tip bilgisi tasimadigi icin
 FleetMgr bu uyumu dogrulayamaz. Her arac modulu (`vehicles/` altindaki her marka) tek bir araci temsil eder; bir arayuz tablosu iki
 satirda kullanilamaz. FleetMgr:
