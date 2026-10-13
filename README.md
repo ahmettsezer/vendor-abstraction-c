@@ -78,6 +78,37 @@ satirda kullanilamaz. FleetMgr:
 - Tipe gore yonetir: bakim araligi tipe gore (otomobil 15.000, tir 30.000 km), yolcuya yeten
   en kucuk otomobili ve yuke yeten en kucuk tiri bulur, tip bazinda filo ozeti cikarir.
 
+### payloadConfig: yuk istasyonlari (kokteki `Payload` taslaginin bolunmus hali)
+
+| Klasor | Icerik |
+|---|---|
+| `platform/` | `payload.h`: sozlesme, hicbir yuk tipini bilmez |
+| `payloads/` | `tank/`, `pod/`: yuk tipleri (vendor'lar), istasyon basina kendi durumlari |
+| `integrator/` | `integration.c`: `const OPS[PL_COUNT]` tablosu, `payload_bind`, `row_of`, dagitim; `main.c` |
+| `inventoryMgr/` | Yuk degisikligi isteklerini toplar, `payload_bind`'i sadece frame sinirinda cagirir (ornek olarak eklendi) |
+| `consumers/` | `weight_balance.c`: sadece sozlesmeyi bilen tuketici |
+
+Calisma zamaninda degisen tek sey `type_of[]` icindeki kucuk bir **index**; fonksiyon
+pointer'lari ROM'daki `const` tabloda. Olasi cagri hedefleri kapali bir kume, `row_of`
+her zaman gecerli bir satir dondurur (gecersiz deger -> `PL_UNKNOWN`), cast ve NULL yok.
+
+### fleetIndexConfig: fleetConfig + payload birlesimi
+
+fleetConfig'teki tipe ozel arayuzler korunur; `void*` yerine payload'daki gibi
+**tipe gore ayri, tipli `const` tablolar ve index** kullanilir:
+
+```c
+static const CarIfc_t   * const s_cars[]   = { [CAR_TOYOTA_COROLLA] = &Toyota_CarIfc, ... };
+static const TruckIfc_t * const s_trucks[] = { [TRUCK_MAN_TGX] = &Man_TruckIfc, ... };
+{ VEHICLE_ID_TOYOTA_COROLLA, VEHICLE_TYPE_CAR,   CAR_TOYOTA_COROLLA },   /* { id, type, index } */
+```
+
+- Otomobil tablosuna tir arayuzu yazmak derleme uyarisi/hatasidir; FleetMgr'da cast ve `void*` yoktur.
+- `carOf()` / `truckOf()` payload'daki `row_of` gibi **her zaman gecerli** bir arayuz doner:
+  tip uymazsa her islemi `FM_ERR_WRONG_TYPE` olan guvenli varsayilan arayuz gelir.
+- Init: index tipin tablosunda mi, arayuz pointer'lari dolu mu, ayni ID / ayni tablo satiri iki kez mi.
+- Bilincli olarak sade: ortak `init`, `getInfo`, `drive`; otomobilde `setPassengers`, tirda `loadCargo`.
+
 `constConfig`, `switchDispatch` ve `fleetConfig` orneklerinde ek olarak su MISRA C:2012 kurallarina
 uyulmustur: 15.5 (tek cikis noktasi), 16.3 (`switch` case'leri `break` ile biter), 17.7 (donus
 degerleri kullanilir veya `(void)` ile yok sayilir). Demo amacli `printf` kullanimi Rule 21.6

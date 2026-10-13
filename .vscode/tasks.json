@@ -200,13 +200,93 @@
             "group": "build"
         },
         {
+            "label": "build fleetIndexConfig",
+            "type": "process",
+            "command": "C:/MinGW/bin/gcc.exe",
+            "args": [
+                "-std=c99",
+                "-Wall",
+                "-Wextra",
+                "-Wpedantic",
+                "-O0",
+                "-g3",
+                "-IfleetMgr",
+                "-Ivehicles/toyota",
+                "-Ivehicles/ford",
+                "-Ivehicles/man",
+                "-Ivehicles/volvo",
+                "-Iintegrator",
+                "fleetMgr/FleetMgr.c",
+                "vehicles/toyota/Toyota.c",
+                "vehicles/ford/Ford.c",
+                "vehicles/man/Man.c",
+                "vehicles/volvo/Volvo.c",
+                "integrator/Integrator_Cfg.c",
+                "integrator/main.c",
+                "-o",
+                "../build/demo_fleetIndex.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/fleetIndexConfig"
+            },
+            "dependsOn": "mkdir build",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}/fleetIndexConfig"
+                ]
+            },
+            "group": "build"
+        },
+        {
+            "label": "build payloadConfig",
+            "type": "process",
+            "command": "C:/MinGW/bin/gcc.exe",
+            "args": [
+                "-std=c99",
+                "-Wall",
+                "-Wextra",
+                "-Wpedantic",
+                "-O0",
+                "-g3",
+                "-Iplatform",
+                "-Ipayloads/tank",
+                "-Ipayloads/pod",
+                "-IinventoryMgr",
+                "-Iconsumers",
+                "payloads/tank/tank.c",
+                "payloads/pod/pod.c",
+                "integrator/integration.c",
+                "inventoryMgr/inventory_mgr.c",
+                "consumers/weight_balance.c",
+                "integrator/main.c",
+                "-o",
+                "../build/demo_payload.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/payloadConfig"
+            },
+            "dependsOn": "mkdir build",
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}/payloadConfig"
+                ]
+            },
+            "group": "build"
+        },
+        {
             "label": "build all",
             "dependsOn": [
                 "build runtimeRegister",
                 "build runtimeRegisterConst",
                 "build constConfig",
                 "build switchDispatch",
-                "build fleetConfig"
+                "build fleetConfig",
+                "build fleetIndexConfig",
+                "build payloadConfig"
             ],
             "dependsOrder": "sequence",
             "problemMatcher": [],

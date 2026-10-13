@@ -60,6 +60,33 @@
                 "${workspaceFolder}/fleetConfig/vehicles/volvo",
                 "${workspaceFolder}/fleetConfig/integrator"
             ]
+        },
+        {
+            "name": "fleetIndexConfig",
+            "compilerPath": "C:/MinGW/bin/gcc.exe",
+            "cStandard": "c99",
+            "intelliSenseMode": "windows-gcc-x86",
+            "includePath": [
+                "${workspaceFolder}/fleetIndexConfig/fleetMgr",
+                "${workspaceFolder}/fleetIndexConfig/vehicles/toyota",
+                "${workspaceFolder}/fleetIndexConfig/vehicles/ford",
+                "${workspaceFolder}/fleetIndexConfig/vehicles/man",
+                "${workspaceFolder}/fleetIndexConfig/vehicles/volvo",
+                "${workspaceFolder}/fleetIndexConfig/integrator"
+            ]
+        },
+        {
+            "name": "payloadConfig",
+            "compilerPath": "C:/MinGW/bin/gcc.exe",
+            "cStandard": "c99",
+            "intelliSenseMode": "windows-gcc-x86",
+            "includePath": [
+                "${workspaceFolder}/payloadConfig/platform",
+                "${workspaceFolder}/payloadConfig/payloads/tank",
+                "${workspaceFolder}/payloadConfig/payloads/pod",
+                "${workspaceFolder}/payloadConfig/inventoryMgr",
+                "${workspaceFolder}/payloadConfig/consumers"
+            ]
         }
     ],
     "version": 4
